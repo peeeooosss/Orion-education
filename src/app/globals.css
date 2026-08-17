@@ -1,0 +1,247 @@
+@import "tailwindcss";
+@source "../src";
+
+@theme inline {
+  /* ── Brand indigo (Sleek Indigo / Deep Space) ── */
+  --color-brand-50: #EEF2FF;
+  --color-brand-100: #E0E7FF;
+  --color-brand-200: #C7D2FE;
+  --color-brand-300: #A5B4FC;
+  --color-brand-400: #818CF8;
+  --color-brand-500: #6366F1;
+  --color-brand-600: #4F46E5;
+  --color-brand-700: #4338CA;
+  --color-brand-800: #3730A3;
+  --color-brand-900: #1E1B4B;
+  --color-brand-950: #0F0D2E;
+
+  /* ── Electric Gold ── */
+  --color-gold-50: #FFFBEB;
+  --color-gold-100: #FEF3C7;
+  --color-gold-200: #FDE68A;
+  --color-gold-300: #FCD34D;
+  --color-gold-400: #FBBF24;
+  --color-gold-500: #F5B700;
+  --color-gold-600: #D69E00;
+  --color-gold-700: #A67C00;
+  --color-gold-800: #7A5A00;
+  --color-gold-900: #4D3800;
+
+  /* ── Neon Teal ── */
+  --color-teal-50: #ECFEFC;
+  --color-teal-100: #CFFDF7;
+  --color-teal-200: #99F9EF;
+  --color-teal-300: #5CEEE0;
+  --color-teal-400: #22DDD0;
+  --color-teal-500: #0FC9BC;
+  --color-teal-600: #0AA39A;
+  --color-teal-700: #0B7F7A;
+  --color-teal-800: #0D6461;
+  --color-teal-900: #0F5250;
+
+  /* ── Vibrant Violet ── */
+  --color-violet-400: #A78BFA;
+  --color-violet-500: #8B5CF6;
+  --color-violet-600: #7C3AED;
+
+  /* ── Student Portal surface (warm off-white → deep) ── */
+  --color-surface-0: #FFFFFF;
+  --color-surface-50: #FAFAFC;
+  --color-surface-100: #F5F5FA;
+  --color-surface-200: #ECECF5;
+  --color-surface-300: #DCDCE8;
+  --color-surface-400: #B8B8CC;
+  --color-surface-500: #8E8EA8;
+  --color-surface-600: #6B6B85;
+  --color-surface-700: #4A4A63;
+  --color-surface-800: #2E2E45;
+  --color-surface-900: #16162A;
+
+  /* ── CRM / Status intent colors ── */
+  --color-intent-hot: #EF4444;
+  --color-intent-warm: #F59E0B;
+  --color-intent-cold: #38BDF8;
+  --color-intent-new: #6366F1;
+  --color-intent-dropped: #94A3B8;
+  --color-intent-won: #22C55E;
+
+  /* ── Standard alerts ── */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* ── Neutrals (cool, for CRM) — Tailwind default slate, redefined for clarity ── */
+  --color-slate-50: #F8FAFC;
+  --color-slate-100: #F1F5F9;
+  --color-slate-200: #E2E8F0;
+  --color-slate-300: #CBD5E1;
+  --color-slate-400: #94A3B8;
+  --color-slate-500: #64748B;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1E293B;
+  --color-slate-900: #0F172A;
+  --color-slate-950: #020617;
+
+  /* ── Fonts ── */
+  --font-display: var(--font-jakarta);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
+  --font-heading: var(--font-jakarta);
+
+  /* ── Radii ── */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ── Shadows / Elevation ── */
+  --shadow-card: 0 2px 16px -4px rgba(16, 16, 42, 0.06);
+  --shadow-float: 0 16px 32px -8px rgba(79, 70, 229, 0.15);
+  --shadow-glow-gold: 0 0 24px 6px rgba(245, 183, 0, 0.45);
+  --shadow-glow-gold-idle: 0 0 0px 0px rgba(245, 183, 0, 0.4);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+  --shadow-sm: 0 1px 2px 0 rgba(16, 16, 42, 0.04);
+  --shadow: 0 1px 3px 0 rgba(16, 16, 42, 0.08), 0 1px 2px 0 rgba(16, 16, 42, 0.04);
+
+  /* ── Borders / Rings ── */
+  --color-border: var(--color-surface-200);
+  --color-input: var(--color-surface-200);
+  --color-ring: var(--color-brand-200);
+  --color-background: var(--color-surface-50);
+  --color-foreground: var(--color-surface-900);
+  --color-card: var(--color-surface-0);
+  --color-card-foreground: var(--color-surface-900);
+  --color-popover: var(--color-surface-0);
+  --color-popover-foreground: var(--color-surface-900);
+  --color-primary: var(--color-brand-600);
+  --color-primary-foreground: var(--color-surface-0);
+  --color-secondary: var(--color-surface-100);
+  --color-secondary-foreground: var(--color-surface-900);
+  --color-muted: var(--color-surface-100);
+  --color-muted-foreground: var(--color-surface-500);
+  --color-accent: var(--color-gold-500);
+  --color-accent-foreground: var(--color-surface-0);
+  --color-destructive: var(--color-error);
+  --color-destructive-foreground: var(--color-surface-0);
+}
+
+@theme css {
+  --box-shadow-card: var(--shadow-card);
+  --box-shadow-float: var(--shadow-float);
+  --box-shadow-glow-gold: var(--shadow-glow-gold);
+  --box-shadow-glow-gold-idle: var(--shadow-glow-gold-idle);
+  --box-shadow-glass: var(--shadow-glass);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  antialiased: true;
+}
+
+/* ── Keyframes ── */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0px 0px rgba(245, 183, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px 8px rgba(245, 183, 0, 0.35);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.animate-reveal {
+  animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+  background: linear-gradient(90deg, transparent 0%, rgba(245, 183, 0, 0.08) 50%, transparent 100%);
+  background-size: 200% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-reveal,
+  .animate-pulse-glow,
+  .animate-shimmer {
+    animation: none !important;
+  }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface-50);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(79, 70, 229, 0.25);
+  border-radius: 3px;
+}
+
+/* ── Semantic utility aliases ── */
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+.font-heading {
+  font-family: var(--font-heading), system-ui, sans-serif;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(120deg, var(--color-gold-400), var(--color-gold-300), var(--color-gold-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-brand-gradient {
+  background: linear-gradient(135deg, var(--color-brand-600), var(--color-violet-600));
+}
+
+.bg-brand-deep {
+  background: linear-gradient(135deg, var(--color-brand-900), var(--color-brand-950));
+}
