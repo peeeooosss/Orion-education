@@ -508,6 +508,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       lastAddedLeadId: lead.id,
     }));
 
+    // Auto-create a follow-up so this lead appears in Follow-ups pipeline
+    fetch("/api/follow-ups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        leadId: lead.id,
+        dueAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        followType: "Call",
+        priority: input.source === "Scholarship Checker" ? "Important" : "Normal",
+        note: `New ${leadTypeFromSource(input.source)} lead. Call to discuss ${lead.targetCollege}.`,
+      }),
+    }).catch(() => {});
+
     return lead;
   },
 

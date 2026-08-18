@@ -68,6 +68,26 @@ export function EngagementControls({ record, kind, onConvert }: EngagementContro
         intentOverride: intentChoice !== "System Calculated",
         intentOverrideReason: intentChoice === "System Calculated" ? undefined : intentReason.trim() || "Agent judgement after call",
       });
+
+      // Create follow-up via API if this raw student has been converted to a lead
+      const leadId = (record as { leadId?: string }).leadId;
+      if (followUpAt && leadId) {
+        try {
+          await fetch("/api/follow-ups", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              leadId,
+              dueAt: new Date(followUpAt).toISOString(),
+              followType: nextAction === "Start Application" ? "Counselling" : "Call",
+              priority: interestStatus === "Interested" || interestStatus === "Qualified" ? "Important" : "Normal",
+              note: nextAction,
+            }),
+          });
+        } catch {
+          // silent
+        }
+      }
     } else {
       updateLeadEngagement(record.id, {
         callStatus,

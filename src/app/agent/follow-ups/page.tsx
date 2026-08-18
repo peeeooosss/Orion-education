@@ -192,7 +192,7 @@ export default function AgentFollowUpsPage() {
                     <td className="p-3.5">
                       {!fu.completed && (
                         <div className="flex items-center gap-2">
-                          <Link href="/agent/dashboard">
+                          <Link href={fu.leadType === "raw" ? "/agent/raw-data" : "/agent/dashboard"}>
                             <Button size="sm" variant="outline" className="h-7 text-[11px]">
                               <PhoneCall className="h-3 w-3" /> Open
                             </Button>

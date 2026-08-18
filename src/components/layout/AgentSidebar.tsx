@@ -3,14 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database, Clock3 } from "lucide-react";
+import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const leadNavItems = [
   { title: "Telecaller Dashboard", href: "/agent/dashboard", icon: LayoutDashboard },
   { title: "New Leads", href: "/agent/dashboard?filter=new", icon: PhoneCall },
   { title: "Hot Leads", href: "/agent/dashboard?filter=hot", icon: Flame },
-  { title: "Follow-ups", href: "/agent/dashboard?filter=contacted", icon: FileCheck2 },
+  { title: "Follow-ups", href: "/agent/follow-ups", icon: FileCheck2 },
 ];
 
 const knowledgeNavItems = [
@@ -18,7 +18,6 @@ const knowledgeNavItems = [
   { title: "Applications", href: "/agent/applications", icon: FileStack },
   { title: "University Directory", href: "/agent/universities", icon: Building2 },
   { title: "Program List", href: "/agent/programs", icon: BookOpen },
-  { title: "Pipeline Follow-ups", href: "/agent/follow-ups", icon: Clock3 },
 ];
 
 interface AgentSidebarProps {
@@ -36,6 +35,9 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
     if (href.includes("?")) {
       const f = href.split("filter=")[1];
       return pathname.startsWith("/agent/dashboard") && filter === f;
+    }
+    if (href === "/agent/follow-ups") {
+      return pathname === "/agent/follow-ups";
     }
     return pathname === href && !filter;
   };

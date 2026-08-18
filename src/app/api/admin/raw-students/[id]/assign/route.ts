@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromCookie } from "@/server/auth";
 import { db } from "@/server/db";
-import { rawStudents, leads, contacts, leadActivities, users } from "@/server/db/schema";
+import { rawStudents, leads, contacts, leadActivities, followUps, users } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(
@@ -87,6 +87,17 @@ export async function POST(
       agentId,
       kind: "assignment",
       note: note || `Assigned by admin from raw data import`,
+    });
+
+    // Auto-create a follow-up so the lead appears in agent's Follow-ups pipeline
+    await db.insert(followUps).values({
+      id: `fu-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      leadId,
+      agentId,
+      dueAt: new Date(),
+      followType: "Call",
+      priority: "Normal",
+      note: `New imported student: ${rawRecord.studentName}. Call to introduce Orion.`,
     });
 
     return NextResponse.json({ ok: true, leadId });
