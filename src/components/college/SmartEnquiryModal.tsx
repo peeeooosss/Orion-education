@@ -39,7 +39,7 @@ export function SmartEnquiryModal({ college, open, onOpenChange }: SmartEnquiryM
   // Pre-fill from auth user + questionnaire when modal opens
   React.useEffect(() => {
     if (open) {
-      if (authUser?.name) setName(authUser.name);
+      if (authUser?.name) setName(authUser.name); // eslint-disable-line react-hooks/set-state-in-effect
       if (authUser?.phone) setPhone(authUser.phone);
       if (questionnaire?.scoreBand) setScore(questionnaire.scoreBand as ScoreBand);
     }

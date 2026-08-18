@@ -61,19 +61,31 @@ export function RoleLoginForm({ role }: RoleLoginFormProps) {
     }
     setLoading(true);
     setError("");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
       const res = await fetch("/api/auth/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: email.trim(), password, role }),
+        signal: controller.signal,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Invalid credentials");
+      clearTimeout(timeout);
+      let data: Record<string, unknown>;
+      try {
+        data = await res.json();
+      } catch {
+        setError("Server returned an invalid response. Please try again.");
         setLoading(false);
         return;
       }
-      const userRole = data.user?.role ?? data.role;
+      if (!res.ok) {
+        setError((data.error as string) || "Invalid credentials");
+        setLoading(false);
+        return;
+      }
+      const user = data.user as Record<string, string> | undefined;
+      const userRole = user?.role ?? data.role;
       if (userRole !== role) {
         const correctPage = userRole === "agent" ? "/auth/agent" : userRole === "admin" ? "/auth/admin" : "/auth/sign-in";
         setError(`This account is for ${userRole}s. Redirecting...`);
@@ -83,8 +95,13 @@ export function RoleLoginForm({ role }: RoleLoginFormProps) {
       }
       const returnTo = searchParams.get("returnTo");
       router.push(returnTo || config.homeHref);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err: unknown) {
+      clearTimeout(timeout);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Server timed out — please try again.");
+      } else {
+        setError("Network error — please check your connection.");
+      }
       setLoading(false);
     }
   }

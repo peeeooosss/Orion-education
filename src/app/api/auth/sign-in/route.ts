@@ -5,6 +5,7 @@ import { verifyPassword, createSession, setSessionCookie } from "@/server/auth";
 import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
+  const start = Date.now();
   try {
     const body = await request.json();
     const { email, password } = body;
@@ -13,10 +14,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
-    const result = await db.select().from(users).where(eq(users.email, email.trim().toLowerCase()));
+    const queryTimeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("DB query timeout")), 8000)
+    );
+
+    const result = await Promise.race([
+      db.select().from(users).where(eq(users.email, email.trim().toLowerCase())),
+      queryTimeout,
+    ]);
+
     const user = result[0];
 
     if (!user) {
+      console.warn(`[sign-in] Unknown email: ${email.trim().toLowerCase()} (${Date.now() - start}ms)`);
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
@@ -26,6 +36,7 @@ export async function POST(request: Request) {
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
+      console.warn(`[sign-in] Wrong password for: ${user.id} (${Date.now() - start}ms)`);
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
@@ -37,6 +48,7 @@ export async function POST(request: Request) {
 
     await setSessionCookie(token);
 
+    console.log(`[sign-in] OK: ${user.id} role=${user.role} (${Date.now() - start}ms)`);
     return NextResponse.json({
       user: {
         id: user.id,
@@ -47,7 +59,11 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Sign-in error:", error);
+    const elapsed = Date.now() - start;
+    console.error(`[sign-in] Error after ${elapsed}ms:`, error);
+    if (error instanceof Error && error.message === "DB query timeout") {
+      return NextResponse.json({ error: "Database timed out — please try again" }, { status: 504 });
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -119,3 +119,42 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ leads: enriched });
 }
+
+export async function PATCH(req: NextRequest) {
+  const session = await getSessionFromCookie();
+  if (!session || (session.role !== "agent" && session.role !== "admin")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    const allowed = [
+      "stage", "callStatus", "interestStatus", "callConnected",
+      "scholarshipApplied", "leadType", "lookingFor", "targetCollege",
+    ];
+
+    const patch: Record<string, unknown> = {};
+    for (const key of allowed) {
+      if (key in updates) patch[key] = updates[key];
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return NextResponse.json({ error: "No valid fields" }, { status: 400 });
+    }
+
+    patch.updatedAt = new Date();
+
+    await db.update(leads).set(patch).where(eq(leads.id, id));
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[leads PATCH] Error:", error);
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
+}

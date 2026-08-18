@@ -104,15 +104,17 @@ function LeadTable({
   onOpen,
   onStartApplication,
   onPush,
+  onUpdateStatus,
+  onUpdateEngagement,
 }: {
   leads: Lead[];
   lastAddedId: string | null;
   onOpen: (lead: Lead) => void;
   onStartApplication: (lead: Lead) => void;
   onPush: (lead: Lead) => void;
+  onUpdateStatus: (id: string, status: Lead["status"]) => void;
+  onUpdateEngagement: (id: string, patch: Partial<Pick<Lead, "callStatus" | "interestStatus">>) => void;
 }) {
-  const updateLeadStatus = useAppStore((s) => s.updateLeadStatus);
-  const updateLeadEngagement = useAppStore((s) => s.updateLeadEngagement);
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
@@ -167,7 +169,7 @@ function LeadTable({
                   <td className="p-3.5">
                     <Select
                       value={lead.status}
-                      onValueChange={(v) => updateLeadStatus(lead.id, v as Lead["status"])}
+                      onValueChange={(v) => onUpdateStatus(lead.id, v as Lead["status"])}
                     >
                       <SelectTrigger className="h-8 w-40 border-slate-200 text-xs">
                         <SelectValue />
@@ -180,10 +182,10 @@ function LeadTable({
                     </Select>
                   </td>
                    <td className="p-3.5">
-                     <select
-                       value={lead.callStatus ?? "Not Called"}
-                       onChange={(event) => updateLeadEngagement(lead.id, { callStatus: event.target.value as CallStatus })}
-                       onClick={(event) => event.stopPropagation()}
+                      <select
+                        value={lead.callStatus ?? "Not Called"}
+                        onChange={(event) => onUpdateEngagement(lead.id, { callStatus: event.target.value as CallStatus })}
+                        onClick={(event) => event.stopPropagation()}
                        className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-gold-500"
                      >
                        {CALL_STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}
@@ -231,14 +233,15 @@ function KanbanCard({
   onOpen,
   onStartApplication,
   onPush,
+  onMarkCallConnected,
 }: {
   lead: Lead;
   isNew: boolean;
   onOpen: (lead: Lead) => void;
   onStartApplication: (lead: Lead) => void;
   onPush: (lead: Lead) => void;
+  onMarkCallConnected: (id: string) => void;
 }) {
-  const markCallConnected = useAppStore((s) => s.markCallConnected);
   return (
     <div
       className={cn(
@@ -292,7 +295,7 @@ function KanbanCard({
             </span>
           </a>
           <button
-            onClick={(e) => { e.stopPropagation(); markCallConnected(lead.id); }}
+            onClick={(e) => { e.stopPropagation(); onMarkCallConnected(lead.id); }}
             className={cn(
               "flex h-7 items-center justify-center rounded-lg border px-1.5",
               lead.callConnected ? "border-green-200 bg-green-50 text-green-600" : "border-slate-200 text-slate-400"
@@ -322,6 +325,7 @@ function LeadKanban({
   onStartApplication,
   onPush,
   onDragEnd,
+  onMarkCallConnected,
 }: {
   leads: Lead[];
   lastAddedId: string | null;
@@ -329,6 +333,7 @@ function LeadKanban({
   onStartApplication: (lead: Lead) => void;
   onPush: (lead: Lead) => void;
   onDragEnd: (result: DropResult) => void;
+  onMarkCallConnected: (id: string) => void;
 }) {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
@@ -360,7 +365,7 @@ function LeadKanban({
                             {...dragProvided.dragHandleProps}
                             className={snapshot.isDragging ? "rotate-1 shadow-xl" : ""}
                           >
-                            <KanbanCard lead={lead} isNew={lead.id === lastAddedId} onOpen={onOpen} onStartApplication={onStartApplication} onPush={onPush} />
+                            <KanbanCard lead={lead} isNew={lead.id === lastAddedId} onOpen={onOpen} onStartApplication={onStartApplication} onPush={onPush} onMarkCallConnected={onMarkCallConnected} />
                           </div>
                         )}
                       </Draggable>
@@ -379,9 +384,8 @@ function LeadKanban({
 
 export function LeadsBoard() {
   const searchParams = useSearchParams();
-  const leads = useAppStore((s) => s.leads);
-  const updateLeadStatus = useAppStore((s) => s.updateLeadStatus);
-  const markScholarshipApplied = useAppStore((s) => s.markScholarshipApplied);
+  const [leads, setLeads] = React.useState<Lead[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const lastAddedId = useAppStore((s) => s.lastAddedLeadId);
   const clearLastAdded = useAppStore((s) => s.clearLastAddedLead);
 
@@ -393,6 +397,67 @@ export function LeadsBoard() {
   const [applyOpen, setApplyOpen] = React.useState(false);
 
   const filter = searchParams.get("filter") ?? "all";
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function fetchLeads() {
+      try {
+        const res = await fetch("/api/leads?sort=smart");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const mapped: Lead[] = (data.leads ?? []).map((r: Record<string, unknown>) => ({
+          id: r.id as string,
+          name: (r.contactName as string) ?? "Unknown",
+          phone: (r.contactPhone as string) ?? "",
+          email: (r.contactEmail as string) ?? "",
+          intentLevel: (r.intentLevel as string) ?? "Cold",
+          scholarshipUnlocked: Number(r.scholarshipAmount ?? 0),
+          lookingFor: (r.lookingFor as string) ?? "",
+          targetCollege: (r.targetCollege as string) ?? "",
+          status: (r.stage as Lead["status"]) ?? "New",
+          callConnected: Boolean(r.callConnected),
+          source: (r.source as string) ?? "",
+          createdAt: (r.createdAt as string) ?? new Date().toISOString(),
+          agent: "",
+          callStatus: (r.callStatus as CallStatus) ?? "Not Called",
+          interestStatus: (r.interestStatus as string) ?? "Not Assessed",
+          remarks: [],
+          intentScore: (r.intentScore as number) ?? 0,
+          intentReasons: (r.intentReasons as string[]) ?? [],
+          leadType: (r.leadType as LeadType) ?? "enquiry",
+          scholarshipApplied: Boolean(r.scholarshipApplied),
+        }));
+        setLeads(mapped);
+      } catch {
+        // silent
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchLeads();
+    return () => { cancelled = true; };
+  }, []);
+
+  async function updateLeadStatus(id: string, status: Lead["status"]) {
+    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
+    try { await fetch("/api/leads", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, stage: status }) }); } catch { /* optimistic */ }
+  }
+
+  async function updateLeadEngagement(id: string, patch: Partial<Pick<Lead, "callStatus" | "interestStatus">>) {
+    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, ...patch } : l));
+    try { await fetch("/api/leads", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...patch }) }); } catch { /* optimistic */ }
+  }
+
+  async function markCallConnected(id: string) {
+    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, callConnected: true, callStatus: "Connected" as CallStatus } : l));
+    try { await fetch("/api/leads", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, callStatus: "Connected", callConnected: true }) }); } catch { /* optimistic */ }
+  }
+
+  async function markScholarshipApplied(leadId: string) {
+    setLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, leadType: "scholarship" as LeadType, scholarshipApplied: true } : l));
+    try { await fetch("/api/leads", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: leadId, scholarshipApplied: true, leadType: "scholarship" }) }); } catch { /* optimistic */ }
+  }
 
   const filtered = React.useMemo(() => {
     let result = leads;
@@ -449,7 +514,7 @@ export function LeadsBoard() {
         <div>
           <h1 className="text-2xl font-bold text-brand-950">Incoming leads</h1>
           <p className="mt-1 text-sm text-slate-600">
-            {filter === "new" ? "Only brand-new leads — call them first." : filter === "hot" ? "Hot intent, high scholarship — your best conversions." : "Every enquiry routed from the student site, live."}
+            {loading ? "Loading leads from database..." : filter === "new" ? "Only brand-new leads — call them first." : filter === "hot" ? "Hot intent, high scholarship — your best conversions." : "Every enquiry routed from the student site, live."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -534,9 +599,9 @@ export function LeadsBoard() {
           <p className="text-xs text-slate-500">Submit an enquiry on the student site and it will appear here instantly.</p>
         </div>
       ) : view === "table" ? (
-        <LeadTable leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} />
+        <LeadTable leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} onUpdateStatus={updateLeadStatus} onUpdateEngagement={updateLeadEngagement} />
       ) : (
-        <LeadKanban leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} onDragEnd={handleDragEnd} />
+        <LeadKanban leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} onDragEnd={handleDragEnd} onMarkCallConnected={markCallConnected} />
       )}
 
       <LeadDetailModal lead={selectedLead} open={modalOpen} onOpenChange={setModalOpen} onStartApplication={startApplication} />
