@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Lock, FileText, PhoneCall, TicketPercent, Wallet, CalendarDays, ShieldCheck } from "lucide-react";
+import * as React from "react";
+import { Check, Lock, FileText, PhoneCall, TicketPercent, Wallet, CalendarDays, ShieldCheck, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAppStore, formatINR } from "@/store/useAppStore";
+import { StudentQuestionnaire } from "@/components/scholarship/StudentQuestionnaire";
+import type { StudentQuestionnaire as Questionnaire } from "@/store/types";
 
 function daysUntilExpiry(expiresAt: string): number {
   const diff = new Date(expiresAt).getTime() - Date.now();
@@ -18,6 +21,21 @@ export default function StudentDashboardPage() {
   const leads = useAppStore((s) => s.leads);
   const payments = useAppStore((s) => s.payments);
   const questionnaire = useAppStore((s) => s.questionnaire);
+  const setQuestionnaire = useAppStore((s) => s.setQuestionnaire);
+  const [onboardingOpen, setOnboardingOpen] = React.useState(false);
+
+  // Show onboarding prompt if questionnaire not completed yet (after auth loads)
+  React.useEffect(() => {
+    if (authUser && !questionnaire?.completedAt) {
+      const timer = setTimeout(() => setOnboardingOpen(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [authUser, questionnaire]);
+
+  function handleOnboardingComplete(data: Questionnaire) {
+    setQuestionnaire(data);
+    setOnboardingOpen(false);
+  }
 
   const phone = authUser?.phone ?? profile.phone;
   const displayName = authUser?.name ?? profile.name;
@@ -217,6 +235,30 @@ export default function StudentDashboardPage() {
           </section>
         </div>
       </div>
+
+      {/* Onboarding prompt banner */}
+      {authUser && !questionnaire?.completedAt && (
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl border-2 border-dashed border-gold-300 bg-gold-50/60 p-6 text-center">
+            <ClipboardList className="mx-auto h-10 w-10 text-gold-600" />
+            <h3 className="mt-3 font-display text-lg font-bold text-surface-900">Complete your student profile</h3>
+            <p className="mt-1 text-sm text-surface-600">Tell us about your academic background and goals to get personalized scholarship and college recommendations.</p>
+            <Button variant="gold" className="mt-4" onClick={() => setOnboardingOpen(true)}>
+              <ClipboardList className="h-4 w-4" /> Complete Profile
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding Modal */}
+      {onboardingOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-brand-950/60 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) setOnboardingOpen(false); }}>
+          <div className="relative max-h-[90vh] w-full overflow-y-auto">
+            <button onClick={() => setOnboardingOpen(false)} className="absolute right-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-surface-600 shadow hover:bg-white">Skip for now</button>
+            <StudentQuestionnaire onComplete={handleOnboardingComplete} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

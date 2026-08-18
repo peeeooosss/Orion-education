@@ -129,6 +129,7 @@ interface AppState {
   lastAddedLeadId: string | null;
   clearLastAddedLead: () => void;
   hydrateAuth: () => Promise<void>;
+  hydrateQuestionnaire: () => Promise<void>;
   addLead: (input: NewLeadInput) => Lead;
   importRawData: (input: { fileName: string; sheetName: string; headers: string[]; rows: Record<string, unknown>[]; importedBy?: string }) => string;
   assignRawStudents: (ids: string[], agent: string) => void;
@@ -201,6 +202,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  hydrateQuestionnaire: async () => {
+    try {
+      const res = await fetch("/api/student/profile");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.questionnaire?.data) {
+          set({ questionnaire: data.questionnaire.data });
+        }
+      }
+    } catch {
+      // silent
+    }
+  },
+
   signUp: (input) => {
     const user: AuthUser = {
       id: uid("user"),
@@ -243,7 +258,16 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   signOut: () => set({ authUser: null, questionnaire: null, payments: [] }),
 
-  setQuestionnaire: (q) => set({ questionnaire: { ...q, completedAt: new Date().toISOString() } }),
+  setQuestionnaire: (q) => {
+    const completed = { ...q, completedAt: new Date().toISOString() };
+    set({ questionnaire: completed });
+    // Persist to DB in background (fire-and-forget)
+    fetch("/api/student/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: completed }),
+    }).catch(() => {});
+  },
 
   createPayment: (input) => {
     const payment: ScholarshipPayment = {

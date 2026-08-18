@@ -9,10 +9,11 @@ import { useAppStore } from "@/store/useAppStore";
 export function StudentLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const hydrateAuth = useAppStore((s) => s.hydrateAuth);
+  const hydrateQuestionnaire = useAppStore((s) => s.hydrateQuestionnaire);
 
   React.useEffect(() => {
-    hydrateAuth();
-  }, [hydrateAuth]);
+    hydrateAuth().then(() => hydrateQuestionnaire());
+  }, [hydrateAuth, hydrateQuestionnaire]);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-surface-50">

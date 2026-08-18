@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
 import { BadgeCheck, Rocket, Sparkles, User, Phone } from "lucide-react";
 import {
@@ -27,15 +28,26 @@ interface SmartEnquiryModalProps {
 
 export function SmartEnquiryModal({ college, open, onOpenChange }: SmartEnquiryModalProps) {
   const addLead = useAppStore((s) => s.addLead);
+  const authUser = useAppStore((s) => s.authUser);
+  const questionnaire = useAppStore((s) => s.questionnaire);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [score, setScore] = useState<ScoreBand>("75-90");
   const [need, setNeed] = useState<string>("Admission Process");
   const [submitted, setSubmitted] = useState(false);
 
+  // Pre-fill from auth user + questionnaire when modal opens
+  React.useEffect(() => {
+    if (open) {
+      if (authUser?.name) setName(authUser.name);
+      if (authUser?.phone) setPhone(authUser.phone);
+      if (questionnaire?.scoreBand) setScore(questionnaire.scoreBand as ScoreBand);
+    }
+  }, [open, authUser, questionnaire]);
+
   function handleSubmit() {
     if (!name.trim() || phone.trim().length < 10) return;
-    const stream = college.programs[0]?.stream ?? "Engineering";
+    const stream = (questionnaire?.stream as import("@/lib/scholarship").Stream) ?? college.programs[0]?.stream ?? "Engineering";
     addLead({
       name: name.trim(),
       phone: phone.trim(),
