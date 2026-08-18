@@ -45,6 +45,7 @@ const SOURCE_LABELS: Record<string, string> = {
 export default function AgentFollowUpsPage() {
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [filter, setFilter] = useState<string>("pending");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,7 +86,8 @@ export default function AgentFollowUpsPage() {
     setFollowUps((prev) => prev.filter((fu) => fu.id !== id));
   }
 
-  const pending = followUps.filter((fu) => !fu.completed);
+  const sourceFiltered = sourceFilter === "all" ? followUps : followUps.filter((fu) => fu.leadType === sourceFilter);
+  const pending = sourceFiltered.filter((fu) => !fu.completed);
   const overdue = pending.filter((fu) => new Date(fu.dueAt) < new Date());
   const today = pending.filter((fu) => {
     const d = new Date(fu.dueAt);
@@ -93,7 +95,7 @@ export default function AgentFollowUpsPage() {
     return d >= now && d.toDateString() === now.toDateString();
   });
 
-  const displayList = filter === "completed" ? followUps.filter((fu) => fu.completed) : pending;
+  const displayList = filter === "completed" ? sourceFiltered.filter((fu) => fu.completed) : pending;
 
   return (
     <div className="space-y-6">
@@ -101,6 +103,28 @@ export default function AgentFollowUpsPage() {
         <p className="text-sm font-semibold text-gold-700">Pipeline</p>
         <h1 className="mt-1 text-2xl font-bold text-brand-950">Follow-ups</h1>
         <p className="mt-1 text-sm text-slate-600">All follow-ups from every source — Enquiry, Scholarship, and Imported Students — in one pipeline.</p>
+      </div>
+
+      {/* Source filter tabs */}
+      <div className="flex gap-2">
+        {[
+          { key: "all", label: "All Sources" },
+          { key: "scholarship", label: "💰 Scholarship" },
+          { key: "enquiry", label: "🌐 Enquiry" },
+          { key: "raw", label: "📋 Imported" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setSourceFilter(tab.key)}
+            className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
+              sourceFilter === tab.key
+                ? "border-brand-400 bg-brand-50 text-brand-700 shadow-sm"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Stats */}
@@ -131,7 +155,7 @@ export default function AgentFollowUpsPage() {
             <CheckCircle2 className="h-4 w-4 text-green-500" />
             <p className="text-xs font-medium text-slate-500">Completed</p>
           </div>
-          <p className="mt-2 font-heading text-2xl font-bold text-green-600">{followUps.filter((fu) => fu.completed).length}</p>
+            <p className="mt-2 font-heading text-2xl font-bold text-green-600">{sourceFiltered.filter((fu) => fu.completed).length}</p>
         </button>
       </div>
 
