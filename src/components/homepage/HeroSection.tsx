@@ -11,16 +11,16 @@ import { STREAM_OPTIONS, type Stream } from "@/lib/scholarship";
 
 const HERO_IMAGES = [
   {
-    src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1800&q=80",
-    alt: "University campus with students",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1800&q=80",
+    src: "/images/hero/slide1.jpg",
     alt: "Students studying in a library",
   },
   {
-    src: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1800&q=80",
+    src: "/images/hero/slide2.jpg",
     alt: "Graduation celebration",
+  },
+  {
+    src: "/images/hero/slide3.jpg",
+    alt: "Students collaboration",
   },
 ];
 
@@ -82,7 +82,7 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
               src={HERO_IMAGES[imageIdx].src}
               alt={HERO_IMAGES[imageIdx].alt}
               fill
-              priority
+              priority={imageIdx === 0}
               sizes="100vw"
               className="object-cover"
             />
