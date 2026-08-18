@@ -5,7 +5,7 @@ import {
   leads, agents, contacts, applications,
   rawStudents, users,
 } from "@/server/db/schema";
-import { eq, count, desc, inArray } from "drizzle-orm";
+import { eq, count, inArray } from "drizzle-orm";
 
 export async function GET() {
   const start = Date.now();
@@ -50,26 +50,26 @@ export async function GET() {
           agentName: string | null;
         }[] = [];
         try {
-          const agentRows = await db
-            .select()
-            .from(agents)
-            .orderBy(desc(agents.conversions));
-          const agentUserIds = agentRows.map((a) => a.id);
-          const agentUsers = agentUserIds.length > 0
-            ? await db.select({ id: users.id, name: users.name }).from(users).where(
-                inArray(users.id, agentUserIds)
-              )
+          const agentUsers = await db
+            .select({ id: users.id, name: users.name })
+            .from(users)
+            .where(eq(users.role, "agent"));
+          const agentStats = agentUsers.length > 0
+            ? await db.select().from(agents).where(inArray(agents.id, agentUsers.map((u) => u.id)))
             : [];
-          const nameMap = new Map(agentUsers.map((u) => [u.id, u.name]));
-          leaderboard = agentRows.map((a) => ({
-            agentId: a.id,
-            userId: a.id,
-            leadsAssigned: a.leadsAssigned,
-            callsMade: a.callsMade,
-            callsConnected: a.callsConnected,
-            conversions: a.conversions,
-            agentName: nameMap.get(a.id) ?? null,
-          }));
+          const statsMap = new Map(agentStats.map((a) => [a.id, a]));
+          leaderboard = agentUsers.map((u) => {
+            const s = statsMap.get(u.id);
+            return {
+              agentId: u.id,
+              userId: u.id,
+              leadsAssigned: s?.leadsAssigned ?? 0,
+              callsMade: s?.callsMade ?? 0,
+              callsConnected: s?.callsConnected ?? 0,
+              conversions: s?.conversions ?? 0,
+              agentName: u.name,
+            };
+          }).sort((a, b) => (b.conversions ?? 0) - (a.conversions ?? 0));
         } catch {
           leaderboard = [];
         }
