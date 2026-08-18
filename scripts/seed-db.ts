@@ -4,7 +4,6 @@ import * as schema from "../src/server/db/schema";
 import { hashPassword } from "../src/server/auth/password";
 import {
   SEED_COLLEGES,
-  SEED_AGENTS,
   SEED_LEADS,
   SEED_RAW_BATCHES,
   SEED_RAW_STUDENTS,
@@ -21,72 +20,79 @@ if (!DATABASE_URL) {
 const sql = neon(DATABASE_URL);
 const db = drizzle(sql, { schema });
 
+const STUDENTS = [
+  { id: "student-1", name: "Aarav Patel", email: "aarav@orion.education", phone: "+91 98765 12345", city: "Bengaluru", state: "Karnataka" },
+  { id: "student-2", name: "Ananya Das", email: "ananya@orion.education", phone: "+91 98765 10001", city: "Guwahati", state: "Assam" },
+  { id: "student-3", name: "Rahul Bora", email: "rahul@orion.education", phone: "+91 98765 10002", city: "Dibrugarh", state: "Assam" },
+  { id: "student-4", name: "Nandita Saikia", email: "nandita@orion.education", phone: "+91 98765 10003", city: "Jorhat", state: "Assam" },
+  { id: "student-5", name: "Priyanka Hazarika", email: "priyanka@orion.education", phone: "+91 98765 10004", city: "Silchar", state: "Assam" },
+];
+
+const AGENTS = [
+  { id: "agent-rohit", name: "Rohit Verma", email: "rohit@orion.education", leadsAssigned: 42, callsMade: 128, callsConnected: 87, conversions: 19 },
+  { id: "agent-priya", name: "Priya Nair", email: "priya@orion.education", leadsAssigned: 38, callsMade: 141, callsConnected: 96, conversions: 23 },
+];
+
+const agentIdMap: Record<string, string> = {};
+
 async function main() {
   console.log("🌱 Starting seed...\n");
 
   // ─── 1. Admin User ─────────────────────────────────────
-  const adminId = "admin-001";
   const adminHash = await hashPassword("Admin@1234");
   try {
     await db.insert(schema.users).values({
-      id: adminId,
+      id: "admin-001",
       email: "admin@orion.education",
       passwordHash: adminHash,
       name: "Superadmin",
       role: "admin",
     });
-    console.log("✅ Admin user created: admin@orion.education / Admin@1234");
+    console.log("✅ Admin user: admin@orion.education / Admin@1234");
   } catch {
     console.log("⚠️  Admin user already exists, skipping");
   }
 
-  // ─── 2. Demo Student User ──────────────────────────────
-  const studentId = "student-demo";
-  const studentHash = await hashPassword("Demo@1234");
-  try {
-    await db.insert(schema.users).values({
-      id: studentId,
-      email: "demo.student@orion.education",
-      passwordHash: studentHash,
-      name: "Demo Student",
-      role: "student",
-      phone: "+91 90000 00000",
-    });
-    console.log("✅ Demo student created: demo.student@orion.education / Demo@1234");
-  } catch {
-    console.log("⚠️  Demo student already exists, skipping");
+  // ─── 2. Student Users ──────────────────────────────────
+  const studentHash = await hashPassword("Student@1234");
+  for (const student of STUDENTS) {
+    try {
+      await db.insert(schema.users).values({
+        id: student.id,
+        email: student.email,
+        passwordHash: studentHash,
+        name: student.name,
+        role: "student",
+        phone: student.phone,
+        city: student.city,
+        state: student.state,
+      });
+      console.log(`✅ Student: ${student.name} (${student.email}) / Student@1234`);
+    } catch {
+      console.log(`⚠️  Student ${student.name} already exists, skipping`);
+    }
   }
 
   // ─── 3. Agents (users + agent records) ─────────────────
-  const AGENT_EMAILS: Record<string, string> = {
-    "Rohit Verma": "rohit@orion.education",
-    "Priya Nair": "priya@orion.education",
-    "Aman Gupta": "aman@orion.education",
-    "Sara Khan": "sara@orion.education",
-  };
-
-  const agentIdMap: Record<string, string> = {};
-
-  for (const agent of SEED_AGENTS) {
-    const userId = `agent-${agent.id}`;
-    agentIdMap[agent.name] = userId;
-    const hash = await hashPassword("Agent@1234");
+  const agentHash = await hashPassword("Agent@1234");
+  for (const agent of AGENTS) {
+    agentIdMap[agent.name] = agent.id;
     try {
       await db.insert(schema.users).values({
-        id: userId,
-        email: AGENT_EMAILS[agent.name] ?? `${agent.name.toLowerCase().replace(/\s/g, ".")}@orion.education`,
-        passwordHash: hash,
+        id: agent.id,
+        email: agent.email,
+        passwordHash: agentHash,
         name: agent.name,
         role: "agent",
       });
       await db.insert(schema.agents).values({
-        id: userId,
+        id: agent.id,
         leadsAssigned: agent.leadsAssigned,
         callsMade: agent.callsMade,
         callsConnected: agent.callsConnected,
         conversions: agent.conversions,
       });
-      console.log(`✅ Agent ${agent.name} created (${AGENT_EMAILS[agent.name]}) / Agent@1234`);
+      console.log(`✅ Agent: ${agent.name} (${agent.email}) / Agent@1234`);
     } catch {
       console.log(`⚠️  Agent ${agent.name} already exists, skipping`);
     }
@@ -135,7 +141,6 @@ async function main() {
         });
         programCount++;
       }
-
       console.log(`✅ College: ${college.name} (${college.programs.length} programs)`);
     } catch {
       console.log(`⚠️  College ${college.name} already exists, skipping`);
@@ -153,9 +158,7 @@ async function main() {
         phone: lead.phone,
         email: lead.email,
       });
-    } catch {
-      // contact may exist, skip silently
-    }
+    } catch { /* skip */ }
 
     const agentUserId = agentIdMap[lead.agent] ?? null;
 
@@ -249,7 +252,6 @@ async function main() {
         updatedAt: new Date(app.updatedAt),
       });
 
-      // Insert document checklist
       for (const doc of app.docs) {
         await db.insert(schema.applicationDocuments).values({
           id: `${app.id}-${doc.id}`,
@@ -260,7 +262,6 @@ async function main() {
         });
       }
 
-      // Insert timeline events
       for (const event of app.timeline) {
         await db.insert(schema.applicationEvents).values({
           id: nanoid(),
@@ -269,20 +270,18 @@ async function main() {
           createdAt: new Date(event.at),
         });
       }
-
       console.log(`✅ Application: ${app.studentName} @ ${app.collegeName} (${app.stage})`);
     } catch {
       console.log(`⚠️  Application ${app.id} already exists, skipping`);
     }
   }
 
-  // ─── Done ──────────────────────────────────────────────
   console.log("\n🎉 Seed complete!");
   console.log("──────────────────────────────────────────");
   console.log("Login credentials:");
-  console.log("  Admin:    admin@orion.education / Admin@1234");
-  console.log("  Agent:    rohit@orion.education / Agent@1234");
-  console.log("  Student:  demo.student@orion.education / Demo@1234");
+  console.log("  Admin:     admin@orion.education / Admin@1234");
+  console.log("  Agent:     rohit@orion.education / Agent@1234");
+  console.log("  Student:   aarav@orion.education / Student@1234");
   console.log("──────────────────────────────────────────");
 }
 

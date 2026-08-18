@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromCookie } from "@/server/auth";
 import { db } from "@/server/db";
 import { followUps, leads, contacts } from "@/server/db/schema";
-import { eq, and, asc, lte } from "drizzle-orm";
+import { eq, and, asc, lte, gte } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookie();
@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
     conditions.push(eq(followUps.completed, false));
   } else if (filter === "upcoming") {
     conditions.push(eq(followUps.completed, false));
+    conditions.push(gte(followUps.dueAt, new Date()));
   }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
@@ -53,9 +54,11 @@ export async function GET(req: NextRequest) {
       completed: followUps.completed,
       completedAt: followUps.completedAt,
       createdAt: followUps.createdAt,
-      // Lead info for display
       leadName: contacts.name,
       leadPhone: contacts.phone,
+      leadSource: leads.source,
+      leadStage: leads.stage,
+      leadType: leads.leadType,
     })
     .from(followUps)
     .leftJoin(leads, eq(followUps.leadId, leads.id))

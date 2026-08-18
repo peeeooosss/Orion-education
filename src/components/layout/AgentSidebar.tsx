@@ -3,9 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, Flame, PhoneCall, FileCheck2, RotateCcw, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database, Clock3 } from "lucide-react";
+import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database, Clock3 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useAppStore";
 
 const leadNavItems = [
   { title: "Telecaller Dashboard", href: "/agent/dashboard", icon: LayoutDashboard },
@@ -19,7 +18,7 @@ const knowledgeNavItems = [
   { title: "Applications", href: "/agent/applications", icon: FileStack },
   { title: "University Directory", href: "/agent/universities", icon: Building2 },
   { title: "Program List", href: "/agent/programs", icon: BookOpen },
-  { title: "Remarks & Follow-ups", href: "/agent/follow-ups", icon: Clock3 },
+  { title: "Pipeline Follow-ups", href: "/agent/follow-ups", icon: Clock3 },
 ];
 
 interface AgentSidebarProps {
@@ -30,7 +29,6 @@ interface AgentSidebarProps {
 export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const resetDemo = useAppStore((s) => s.resetDemo);
 
   const filter = searchParams.get("filter");
 
@@ -108,14 +106,6 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
 
           <div className="my-4 h-px bg-white/10" />
 
-          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/40">Demo Controls</p>
-          <button
-            onClick={resetDemo}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <RotateCcw className="h-5 w-5 shrink-0 text-gold-400" strokeWidth={1.5} />
-            Reset demo data
-          </button>
           <Link
             href="/"
             className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
