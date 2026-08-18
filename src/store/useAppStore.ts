@@ -147,7 +147,7 @@ interface AppState {
   setStudentProfile: (profile: StudentProfile) => void;
   signUp: (input: { name: string; email: string; phone: string; password: string; city?: string; state?: string }) => AuthUser;
   signIn: (input: { email: string; password: string }) => AuthUser | null;
-  signOut: () => void;
+  signOut: () => Promise<void>;
   setQuestionnaire: (q: StudentQuestionnaire) => void;
   createPayment: (input: { studentId: string; studentName: string; email: string; phone: string; collegeIds: string[]; primaryCollegeId?: string }) => ScholarshipPayment;
   completePayment: (paymentId: string) => void;
@@ -256,8 +256,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     return null;
   },
 
-  signOut: () => {
-    fetch("/api/auth/sign-out", { method: "POST" }).catch(() => {});
+  signOut: async () => {
+    try {
+      await fetch("/api/auth/sign-out", { method: "POST" });
+    } catch {}
     set({ authUser: null, questionnaire: null, payments: [] });
   },
 
