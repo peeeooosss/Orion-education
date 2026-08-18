@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromCookie } from "@/server/auth";
 import { db } from "@/server/db";
-import { rawStudents, leads, contacts, leadActivities, followUps, users } from "@/server/db/schema";
+import { rawStudents, leads, contacts, leadActivities, followUps, users, agents } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(
@@ -76,9 +76,15 @@ export async function POST(
     // Update raw student status
     await db.update(rawStudents).set({
       status: "Assigned",
-      assignedAgent: agentUser[0].name,
+      assignedAgent: agentId,
       leadId,
     }).where(eq(rawStudents.id, id));
+
+    // Increment agent's leadsAssigned counter
+    const agentStats = await db.select({ leadsAssigned: agents.leadsAssigned }).from(agents).where(eq(agents.id, agentId)).limit(1);
+    await db.update(agents).set({
+      leadsAssigned: (agentStats[0]?.leadsAssigned ?? 0) + 1,
+    }).where(eq(agents.id, agentId));
 
     // Log assignment activity
     await db.insert(leadActivities).values({

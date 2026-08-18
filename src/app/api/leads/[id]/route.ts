@@ -133,6 +133,16 @@ export async function PATCH(
 
   await db.update(leads).set(updates).where(eq(leads.id, id));
 
+  // Auto-increment agent's conversions counter when lead is admitted
+  if (body.stage === "Admitted") {
+    const leadResult = await db.select({ agentId: leads.agentId }).from(leads).where(eq(leads.id, id)).limit(1);
+    const agentId = leadResult[0]?.agentId;
+    if (agentId) {
+      const agentStats = await db.select({ conversions: agents.conversions }).from(agents).where(eq(agents.id, agentId)).limit(1);
+      await db.update(agents).set({ conversions: (agentStats[0]?.conversions ?? 0) + 1 }).where(eq(agents.id, agentId));
+    }
+  }
+
   // Log the update as activity
   if (body.stage || body.interestStatus || body.callStatus) {
     await db.insert(leadActivities).values({

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,7 @@ interface AgentRow {
 }
 
 export default function AdminAgentsPage() {
+  const router = useRouter();
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -108,7 +110,7 @@ export default function AdminAgentsPage() {
       ) : (
         <div className="space-y-3">
           {agents.map((agent) => (
-            <div key={agent.id} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div key={agent.id} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-gold-300 transition-all cursor-pointer" onClick={() => router.push(`/admin/agents/${agent.id}`)}>
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: agent.avatarColor }}>
                 {agent.name.charAt(0)}
               </div>
@@ -131,10 +133,11 @@ export default function AdminAgentsPage() {
                 variant="outline"
                 size="sm"
                 className={`h-8 text-xs ${agent.active ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
-                onClick={() => toggleActive(agent.id, agent.active)}
+                onClick={(e) => { e.stopPropagation(); toggleActive(agent.id, agent.active); }}
               >
                 {agent.active ? "Deactivate" : "Activate"}
               </Button>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
             </div>
           ))}
         </div>

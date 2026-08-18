@@ -142,6 +142,10 @@ export async function PATCH(req: NextRequest) {
   const allowed = [
     "status", "callStatus", "interestStatus", "assignedAgent",
     "intentLevel", "intentOverride", "intentOverrideReason",
+    "studentName", "phone", "email", "city", "state", "stream",
+    "scoreBand", "entranceExam", "entranceScore", "preferredCollege",
+    "preferredProgram", "budgetRange", "admissionTimeline",
+    "hostelRequired", "loanRequired",
   ];
 
   const patch: Record<string, unknown> = {};

@@ -76,6 +76,7 @@ export const SEED_COLLEGES: College[] = [
       { id: "rv2", title: "Placement Day 2025", duration: "1:10", from: "#0A1429", to: "#0F0D2E" },
       { id: "rv3", title: "Student Life", duration: "0:55", from: "#F5B700", to: "#0A1429" },
     ],
+    sourceWebsite: "https://www.rvce.edu.in",
   },
   {
     id: "bmsce",
@@ -113,6 +114,7 @@ export const SEED_COLLEGES: College[] = [
       { id: "bm1", title: "Main Campus Tour", duration: "1:05", from: "#0F0D2E", to: "#2A4D8F" },
       { id: "bm2", title: "Fest 'Sparsh' Highlights", duration: "0:48", from: "#F5B700", to: "#0F0D2E" },
     ],
+    sourceWebsite: "https://bmsce.ac.in",
   },
   {
     id: "christ",
@@ -150,6 +152,7 @@ export const SEED_COLLEGES: College[] = [
       { id: "ch1", title: "Campus Life", duration: "0:38", from: "#0F0D2E", to: "#4A3F8F" },
       { id: "ch2", title: "MBA Orientation", duration: "0:52", from: "#F5B700", to: "#0F0D2E" },
     ],
+    sourceWebsite: "https://www.christuniversity.in",
   },
   {
     id: "manipal",
@@ -188,6 +191,7 @@ export const SEED_COLLEGES: College[] = [
       { id: "mit1", title: "300-Acre Campus", duration: "1:20", from: "#0A1429", to: "#1C6B4F" },
       { id: "mit2", title: "TechTatva Festival", duration: "0:45", from: "#F5B700", to: "#0F0D2E" },
     ],
+    sourceWebsite: "https://manipal.edu/mit",
   },
   {
     id: "nmims",
@@ -225,6 +229,7 @@ export const SEED_COLLEGES: College[] = [
       { id: "nm1", title: "MBA Campus Tour", duration: "1:02", from: "#0F0D2E", to: "#5B8F2A" },
       { id: "nm2", title: "Placement Season", duration: "0:58", from: "#F5B700", to: "#0F0D2E" },
     ],
+    sourceWebsite: "https://www.nmims.edu",
   },
   {
     id: "dtu",
@@ -263,6 +268,7 @@ export const SEED_COLLEGES: College[] = [
       { id: "dt1", title: "Campus Drone Tour", duration: "1:15", from: "#0A1429", to: "#2A6B8F" },
       { id: "dt2", title: "Hackathon 2025", duration: "0:40", from: "#F5B700", to: "#0F0D2E" },
     ],
+    sourceWebsite: "https://www.dtu.ac.in",
   },
   {
     id: "nid",
@@ -300,6 +306,7 @@ export const SEED_COLLEGES: College[] = [
       { id: "nid1", title: "Design Studios", duration: "0:50", from: "#0F0D2E", to: "#8F5B2A" },
       { id: "nid2", title: "Graduation Show", duration: "1:00", from: "#F5B700", to: "#0F0D2E" },
     ],
+    sourceWebsite: "https://www.nid.edu",
   },
   {
     id: "sjcc",
@@ -336,6 +343,7 @@ export const SEED_COLLEGES: College[] = [
       { id: "sj1", title: "Heritage Campus", duration: "0:35", from: "#0F0D2E", to: "#5B5B8F" },
       { id: "sj2", title: "Finance Fest", duration: "0:44", from: "#F5B700", to: "#0F0D2E" },
     ],
+    sourceWebsite: "https://www.sjcc.edu.in",
   },
   {
     id: "myra",
