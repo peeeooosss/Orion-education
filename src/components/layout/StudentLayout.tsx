@@ -4,9 +4,15 @@ import * as React from "react";
 import { Suspense } from "react";
 import { StudentSidebar } from "./StudentSidebar";
 import { AgentHeader } from "./AgentHeader";
+import { useAppStore } from "@/store/useAppStore";
 
 export function StudentLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const hydrateAuth = useAppStore((s) => s.hydrateAuth);
+
+  React.useEffect(() => {
+    hydrateAuth();
+  }, [hydrateAuth]);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-surface-50">

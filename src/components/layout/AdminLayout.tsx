@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Suspense } from "react";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
-import { ZoneSwitcher } from "@/components/layout/ZoneSwitcher";
+
 import { cn } from "@/lib/utils";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -22,7 +22,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       >
         <div className="mx-auto max-w-7xl">{children}</div>
       </main>
-      <ZoneSwitcher />
     </div>
   );
 }

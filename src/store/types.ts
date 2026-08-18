@@ -227,7 +227,10 @@ export interface College {
   reels: CampusReel[];
   coverImage?: string;
   photos?: string[];
+  videoLinks?: string[];
   sourceWebsite?: string;
+  partnerCollege?: boolean;
+  isPublished?: boolean;
   feesTbc?: boolean;
 }
 

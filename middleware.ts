@@ -31,19 +31,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isAuthRoute) {
-    if (session) {
-      if (session.role === "agent" || session.role === "admin") {
-        return NextResponse.redirect(new URL("/agent/dashboard", request.url));
-      }
-      return NextResponse.redirect(new URL("/student/dashboard", request.url));
-    }
-    return NextResponse.next();
+  // Logged-in users shouldn't visit auth pages
+  if (isAuthRoute && session) {
+    if (session.role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    if (session.role === "agent") return NextResponse.redirect(new URL("/agent/dashboard", request.url));
+    return NextResponse.redirect(new URL("/student/dashboard", request.url));
   }
 
   if (isAgentRoute) {
     if (!session) {
-      return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+      return NextResponse.redirect(new URL("/auth/agent", request.url));
     }
     if (session.role !== "agent" && session.role !== "admin") {
       return NextResponse.redirect(new URL("/student/dashboard", request.url));
@@ -53,10 +50,11 @@ export async function middleware(request: NextRequest) {
 
   if (isAdminRoute) {
     if (!session) {
-      return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+      return NextResponse.redirect(new URL("/auth/admin", request.url));
     }
     if (session.role !== "admin") {
-      return NextResponse.redirect(new URL("/agent/dashboard", request.url));
+      if (session.role === "agent") return NextResponse.redirect(new URL("/agent/dashboard", request.url));
+      return NextResponse.redirect(new URL("/student/dashboard", request.url));
     }
     return NextResponse.next();
   }

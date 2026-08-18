@@ -9,26 +9,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
-import { useAppStore } from "@/store/useAppStore";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const signUp = useAppStore((s) => s.signUp);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !phone.trim() || !password) { setError("Complete all required fields."); return; }
     if (password !== confirm) { setError("Passwords do not match."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    setLoading(true);
     setError("");
-    signUp({ name: name.trim(), email: email.trim(), phone: phone.trim(), password });
-    router.push("/student/dashboard");
+    try {
+      const res = await fetch("/api/auth/sign-up", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), phone: phone.trim(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Failed to create account"); setLoading(false); return; }
+      router.push("/student/dashboard");
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   }
 
   return (
@@ -53,8 +64,8 @@ export default function SignUpPage() {
               <div className="space-y-2"><Label htmlFor="sup-confirm">Confirm</Label><Input id="sup-confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm password" className="h-12 rounded-2xl" /></div>
             </div>
             {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-            <p className="text-xs text-surface-500">By creating an account you agree to receive counselling updates. This is a demo — passwords are not encrypted.</p>
-            <Button variant="gold" className="h-12 w-full" type="submit"><UserPlus className="h-4 w-4" /> Create account</Button>
+            <p className="text-xs text-surface-500">By creating an account you agree to receive counselling updates.</p>
+            <Button variant="gold" className="h-12 w-full" type="submit" disabled={loading}><UserPlus className="h-4 w-4" /> {loading ? "Creating..." : "Create account"}</Button>
           </form>
 
           <div className="mt-4 text-center">

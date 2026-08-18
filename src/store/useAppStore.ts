@@ -128,6 +128,7 @@ interface AppState {
   questionnaire: StudentQuestionnaire | null;
   lastAddedLeadId: string | null;
   clearLastAddedLead: () => void;
+  hydrateAuth: () => Promise<void>;
   addLead: (input: NewLeadInput) => Lead;
   importRawData: (input: { fileName: string; sheetName: string; headers: string[]; rows: Record<string, unknown>[]; importedBy?: string }) => string;
   assignRawStudents: (ids: string[], agent: string) => void;
@@ -174,6 +175,31 @@ export const useAppStore = create<AppState>((set, get) => ({
   lastAddedLeadId: null,
 
   clearLastAddedLead: () => set({ lastAddedLeadId: null }),
+
+  hydrateAuth: async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) {
+          set({
+            authUser: {
+              id: data.user.id,
+              name: data.user.name,
+              email: data.user.email,
+              phone: data.user.phone ?? "",
+              role: data.user.role,
+              city: data.user.city,
+              state: data.user.state,
+              createdAt: new Date().toISOString(),
+            },
+          });
+        }
+      }
+    } catch {
+      // silent
+    }
+  },
 
   signUp: (input) => {
     const user: AuthUser = {

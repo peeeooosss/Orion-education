@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
-import { ZoneSwitcher } from "@/components/layout/ZoneSwitcher";
+
 import { HeroSection } from "@/components/homepage/HeroSection";
 import { CollegeGrid, type SortKey } from "@/components/homepage/CollegeGrid";
 import { WhyOrion } from "@/components/homepage/WhyOrion";
@@ -92,7 +92,6 @@ export default function HomePage() {
         </section>
       </main>
       <Footer />
-      <ZoneSwitcher />
     </div>
   );
 }

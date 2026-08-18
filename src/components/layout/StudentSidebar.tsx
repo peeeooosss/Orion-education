@@ -34,6 +34,14 @@ export function StudentSidebar({ open, onToggle }: StudentSidebarProps) {
   const pathname = usePathname();
   const [enquiryOpen, setEnquiryOpen] = React.useState(false);
   const defaultCollege = useAppStore((s) => s.colleges.find((college) => college.id === "myra") ?? s.colleges[0]);
+  const authUser = useAppStore((s) => s.authUser);
+  const questionnaire = useAppStore((s) => s.questionnaire);
+  const profile = useAppStore((s) => s.studentProfile);
+
+  const displayName = authUser?.name ?? profile.name;
+  const initial = displayName.charAt(0).toUpperCase();
+  const stream = questionnaire?.stream ?? profile.stream;
+  const score = questionnaire?.scoreBand ?? profile.scoreBand;
 
   return (
     <aside
@@ -105,11 +113,11 @@ export function StudentSidebar({ open, onToggle }: StudentSidebarProps) {
         <div className="border-t border-white/10 p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold-500 to-gold-600 text-sm font-bold text-brand-950">
-              A
+              {initial}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">Aarav Patel</p>
-              <p className="text-xs text-gold-400">Engineering • 90+ Score</p>
+              <p className="truncate text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-gold-400">{stream || "Not set"} {score ? `• ${score}` : ""}</p>
             </div>
           </div>
         </div>

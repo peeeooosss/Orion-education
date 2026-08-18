@@ -5,18 +5,18 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { RoleLoginForm } from "@/components/auth/RoleLoginForm";
 
-function SignInContent() {
+function AdminSignInContent() {
   return (
     <>
       <SiteHeader />
       <main className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4">
-        <RoleLoginForm role="student" />
+        <RoleLoginForm role="admin" />
       </main>
       <Footer />
     </>
   );
 }
 
-export default function StudentSignInPage() {
-  return <Suspense fallback={null}><SignInContent /></Suspense>;
+export default function AdminSignInPage() {
+  return <Suspense fallback={null}><AdminSignInContent /></Suspense>;
 }

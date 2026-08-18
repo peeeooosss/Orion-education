@@ -3,19 +3,20 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowLeft, LayoutDashboard, RotateCcw, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, MousePointerClick } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, MousePointerClick, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useAppStore";
+
 
 const navItems = [
   { title: "Master Overview", href: "/admin/dashboard", icon: LayoutDashboard, section: null },
   { title: "Enquiries & Conversions", href: "/admin/dashboard?section=analytics", icon: BarChart3, section: "analytics" },
   { title: "Scholarship Budgets", href: "/admin/budgets", icon: Wallet, section: null },
+  { title: "Colleges", href: "/admin/colleges", icon: Building2, section: null },
+  { title: "Agents", href: "/admin/agents", icon: Users2, section: null },
   { title: "Student RAW DATA", href: "/admin/raw-data", icon: Upload, section: null },
   { title: "Payments", href: "/admin/payments", icon: IndianRupee, section: null },
   { title: "Website Leads", href: "/admin/website-leads", icon: MousePointerClick, section: null },
   { title: "Applications Pipeline", href: "/admin/dashboard?section=applications", icon: FileStack, section: "applications" },
-  { title: "Agent Performance", href: "/admin/dashboard?section=agents", icon: Users2, section: "agents" },
 ];
 
 interface AdminSidebarProps {
@@ -27,8 +28,6 @@ export function AdminSidebar({ open, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const section = searchParams.get("section");
-  const resetDemo = useAppStore((s) => s.resetDemo);
-
   return (
     <aside
       className="fixed left-0 top-0 z-40 flex h-screen flex-col overflow-hidden bg-brand-950 text-white transition-[width] duration-300 ease-in-out"
@@ -77,17 +76,6 @@ export function AdminSidebar({ open, onToggle }: AdminSidebarProps) {
           );
         })}
         <div className="my-4 h-px bg-white/10" />
-        <button
-          onClick={resetDemo}
-          title="Reset demo data"
-          className={cn(
-            "flex w-full items-center gap-3 rounded-md py-2.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white",
-            open ? "px-3" : "justify-center px-0"
-          )}
-        >
-          <RotateCcw className="h-5 w-5 shrink-0 text-gold-400" />
-          {open && "Reset demo data"}
-        </button>
         <Link
           href="/"
           title="Back to Student Site"

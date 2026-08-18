@@ -26,6 +26,7 @@ const STUDENTS = [
   { id: "student-3", name: "Rahul Bora", email: "rahul@orion.education", phone: "+91 98765 10002", city: "Dibrugarh", state: "Assam" },
   { id: "student-4", name: "Nandita Saikia", email: "nandita@orion.education", phone: "+91 98765 10003", city: "Jorhat", state: "Assam" },
   { id: "student-5", name: "Priyanka Hazarika", email: "priyanka@orion.education", phone: "+91 98765 10004", city: "Silchar", state: "Assam" },
+  { id: "student-6", name: "PIYUSH BHUYAN", email: "piyushbhuyan71@gmail.com", phone: "+91 98765 10005", city: "Guwahati", state: "Assam" },
 ];
 
 const AGENTS = [

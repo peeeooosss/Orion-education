@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, BadgePercent, TicketPercent } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
-import { ZoneSwitcher } from "@/components/layout/ZoneSwitcher";
+
 import { ScholarshipUnlockChecker } from "@/components/scholarship/ScholarshipUnlockChecker";
 import { useAppStore, formatINR } from "@/store/useAppStore";
 import { estimateFromProfile } from "@/lib/scholarship";
@@ -73,7 +73,6 @@ function ScholarshipPageContent() {
         </div>
       </main>
       <Footer />
-      <ZoneSwitcher />
     </div>
   );
 }

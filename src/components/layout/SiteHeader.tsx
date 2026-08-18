@@ -61,7 +61,12 @@ export function SiteHeader() {
             <>
               <Link href="/auth/sign-in" className="hidden sm:block">
                 <Button variant="outline" size="sm" className="border-surface-300 text-surface-900 hover:border-gold-500 hover:text-gold-700">
-                  Sign In
+                  Student Sign In
+                </Button>
+              </Link>
+              <Link href="/auth/agent" className="hidden sm:block">
+                <Button variant="outline" size="sm" className="border-surface-300 text-surface-600 hover:border-gold-500 hover:text-gold-700">
+                  Agent
                 </Button>
               </Link>
               <Link href="/auth/sign-up">
@@ -121,7 +126,9 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <Link href="/auth/sign-in" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">Sign In</Link>
+              <Link href="/auth/sign-in" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">Student Sign In</Link>
+              <Link href="/auth/agent" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">Agent Sign In</Link>
+              <Link href="/auth/admin" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">Admin Sign In</Link>
               <Link href="/auth/sign-up" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">Get Started</Link>
             </>
           )}

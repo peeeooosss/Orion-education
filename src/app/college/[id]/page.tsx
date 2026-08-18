@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, BadgeCheck, BadgePercent, Building2, Calendar, ExternalLink, GraduationCap, MapPin, PhoneCall, Star, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
-import { ZoneSwitcher } from "@/components/layout/ZoneSwitcher";
+
 import { ProgramFacts } from "@/components/college/ProgramFacts";
 import { CampusReels } from "@/components/college/CampusReels";
 import { SmartEnquiryModal } from "@/components/college/SmartEnquiryModal";
@@ -38,7 +38,6 @@ export default function CollegeDetailPage() {
           </div>
         </main>
         <Footer />
-        <ZoneSwitcher />
       </div>
     );
   }
@@ -229,7 +228,6 @@ export default function CollegeDetailPage() {
 
       <SmartEnquiryModal college={college} open={enquiryOpen} onOpenChange={setEnquiryOpen} />
       <VisitWebsiteModal college={college} open={visitOpen} onOpenChange={setVisitOpen} />
-      <ZoneSwitcher />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Route, Sparkles, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
-import { ZoneSwitcher } from "@/components/layout/ZoneSwitcher";
+
 import { PipelineWidget } from "@/components/journey/PipelineWidget";
 import { FollowStudent } from "@/components/journey/FollowStudent";
 import { JOURNEY_STEPS } from "@/lib/journey";
@@ -98,7 +98,6 @@ export default function JourneyPage() {
         </div>
       </main>
       <Footer />
-      <ZoneSwitcher />
     </div>
   );
 }

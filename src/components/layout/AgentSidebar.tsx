@@ -118,10 +118,10 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
         <div className="border-t border-white/10 p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 text-xs font-bold">
-              R
+              A
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">Rohit Verma</p>
+              <p className="truncate text-sm font-medium">Agent</p>
               <p className="text-xs text-gold-400">Telecaller · On call</p>
             </div>
           </div>
