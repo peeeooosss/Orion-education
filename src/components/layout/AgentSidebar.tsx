@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useAppStore";
 
 const leadNavItems = [
   { title: "Telecaller Dashboard", href: "/agent/dashboard", icon: LayoutDashboard },
@@ -28,8 +29,11 @@ interface AgentSidebarProps {
 export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const authUser = useAppStore((s) => s.authUser);
 
   const filter = searchParams.get("filter");
+  const agentName = authUser?.name || "Agent";
+  const agentInitial = agentName.charAt(0).toUpperCase();
 
   const isActive = (href: string) => {
     if (href.includes("?")) {
@@ -119,11 +123,11 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
 
         <div className="border-t border-white/10 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 text-xs font-bold">
-              A
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold-500 text-brand-950 text-xs font-bold">
+              {agentInitial}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">Agent</p>
+              <p className="truncate text-sm font-medium">{agentName}</p>
               <p className="text-xs text-gold-400">Telecaller · On call</p>
             </div>
           </div>

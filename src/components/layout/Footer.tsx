@@ -7,7 +7,6 @@ const columns = [
       { label: "Top Colleges", href: "#colleges" },
       { label: "Student Journey", href: "/journey" },
       { label: "Scholarships", href: "/scholarship" },
-      { label: "ROI Calculator", href: "#roi" },
     ],
   },
   {

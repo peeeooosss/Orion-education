@@ -30,8 +30,11 @@ const STUDENTS = [
 ];
 
 const AGENTS = [
-  { id: "agent-rohit", name: "Rohit Verma", email: "rohit@orion.education", leadsAssigned: 42, callsMade: 128, callsConnected: 87, conversions: 19 },
-  { id: "agent-priya", name: "Priya Nair", email: "priya@orion.education", leadsAssigned: 38, callsMade: 141, callsConnected: 96, conversions: 23 },
+  { id: "agent-rohit", name: "Rohit Verma", email: "rohit@orion.education", leadsAssigned: 42, callsMade: 128, callsConnected: 87, conversions: 19, avatarColor: "#6366f1" },
+  { id: "agent-priya", name: "Priya Nair", email: "priya@orion.education", leadsAssigned: 38, callsMade: 141, callsConnected: 96, conversions: 23, avatarColor: "#ec4899" },
+  { id: "agent-vikram", name: "Vikram Singh", email: "vikram@orion.education", leadsAssigned: 55, callsMade: 203, callsConnected: 142, conversions: 31, avatarColor: "#f59e0b" },
+  { id: "agent-meera", name: "Meera Reddy", email: "meera@orion.education", leadsAssigned: 29, callsMade: 98, callsConnected: 64, conversions: 12, avatarColor: "#10b981" },
+  { id: "agent-arjun", name: "Arjun Mehta", email: "arjun@orion.education", leadsAssigned: 18, callsMade: 52, callsConnected: 31, conversions: 5, avatarColor: "#8b5cf6" },
 ];
 
 const agentIdMap: Record<string, string> = {};
@@ -92,6 +95,7 @@ async function main() {
         callsMade: agent.callsMade,
         callsConnected: agent.callsConnected,
         conversions: agent.conversions,
+        avatarColor: agent.avatarColor,
       });
       console.log(`✅ Agent: ${agent.name} (${agent.email}) / Agent@1234`);
     } catch {
