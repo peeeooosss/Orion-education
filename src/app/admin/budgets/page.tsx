@@ -15,7 +15,7 @@ export default function AdminBudgetsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
-  const rows = colleges.map((college) => {
+  const rows = colleges.filter((c) => c.partnerCollege).map((college) => {
     const allocated = college.scholarships.budget ?? 0;
     const used = leads.filter((lead) => lead.targetCollege === college.name).reduce((sum, lead) => sum + lead.scholarshipUnlocked, 0);
     const remaining = Math.max(0, allocated - used);

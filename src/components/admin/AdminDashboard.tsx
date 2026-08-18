@@ -84,7 +84,7 @@ export function AdminDashboard() {
   const conversions = leads.filter((l) => isConverted(l.status)).length;
   const conversionRate = totalEnquiries > 0 ? ((conversions / totalEnquiries) * 100).toFixed(1) : "0";
   const budgetUsed = leads.reduce((sum, l) => sum + l.scholarshipUnlocked, 0);
-  const totalBudget = colleges.reduce((sum, college) => sum + (college.scholarships.budget ?? 0), 0);
+  const totalBudget = colleges.filter((c) => c.partnerCollege).reduce((sum, college) => sum + (college.scholarships.budget ?? 0), 0);
   const budgetPct = totalBudget > 0 ? Math.min(100, Math.round((budgetUsed / totalBudget) * 100)) : 0;
 
   const pipeline = LEAD_STATUSES.map((status) => ({
@@ -184,7 +184,7 @@ export function AdminDashboard() {
               <div className="flex items-end justify-between">
                 <div>
                   <p className="font-heading text-3xl font-bold text-brand-950">{formatINR(budgetUsed)}</p>
-                  <p className="text-xs text-slate-500">of {formatINR(totalBudget)} allocated across colleges</p>
+                  <p className="text-xs text-slate-500">of {formatINR(totalBudget)} allocated across partner colleges</p>
                 </div>
                 <Badge className={cn(budgetPct > 80 ? "bg-red-100 text-red-700" : "bg-gold-50 text-gold-600")}>
                   {budgetPct}% used

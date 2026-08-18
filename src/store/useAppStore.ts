@@ -256,7 +256,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     return null;
   },
 
-  signOut: () => set({ authUser: null, questionnaire: null, payments: [] }),
+  signOut: () => {
+    fetch("/api/auth/sign-out", { method: "POST" }).catch(() => {});
+    set({ authUser: null, questionnaire: null, payments: [] });
+  },
 
   setQuestionnaire: (q) => {
     const completed = { ...q, completedAt: new Date().toISOString() };

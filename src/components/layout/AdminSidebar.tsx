@@ -3,8 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, MousePointerClick, Building2 } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, MousePointerClick, Building2, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useAppStore";
+import { useRouter } from "next/navigation";
 
 
 const navItems = [
@@ -28,6 +30,8 @@ export function AdminSidebar({ open, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const section = searchParams.get("section");
+  const signOut = useAppStore((s) => s.signOut);
+  const router = useRouter();
   return (
     <aside
       className="fixed left-0 top-0 z-40 flex h-screen flex-col overflow-hidden bg-brand-950 text-white transition-[width] duration-300 ease-in-out"
@@ -95,11 +99,18 @@ export function AdminSidebar({ open, onToggle }: AdminSidebarProps) {
             S
           </div>
           {open && (
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">Superadmin</p>
               <p className="text-xs text-gold-400">Orion HQ</p>
             </div>
           )}
+          <button
+            onClick={() => { signOut(); router.push("/"); }}
+            className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-red-500/20 hover:text-red-400", !open && "mt-2")}
+            title="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </aside>

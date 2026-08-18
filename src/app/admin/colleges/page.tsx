@@ -235,7 +235,7 @@ export default function AdminCollegesPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-1"><Label>Placement %</Label><Input type="number" value={form.placementPct} onChange={(e) => setForm((p) => ({ ...p, placementPct: Number(e.target.value) }))} className="rounded-xl" /></div>
             <div className="space-y-1"><Label>Highest Placement (₹)</Label><Input type="number" value={form.highestPlacement} onChange={(e) => setForm((p) => ({ ...p, highestPlacement: Number(e.target.value) }))} className="rounded-xl" /></div>
-            <div className="space-y-1"><Label>Budget (₹)</Label><Input type="number" value={form.budget} onChange={(e) => setForm((p) => ({ ...p, budget: Number(e.target.value) }))} className="rounded-xl" /></div>
+            {form.partnerCollege && <div className="space-y-1"><Label>Scholarship Budget (₹)</Label><Input type="number" value={form.budget} onChange={(e) => setForm((p) => ({ ...p, budget: Number(e.target.value) }))} className="rounded-xl" /></div>}
           </div>
 
           <div className="space-y-1"><Label>About</Label><textarea value={form.about} onChange={(e) => setForm((p) => ({ ...p, about: e.target.value }))} className="h-20 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" /></div>
@@ -262,7 +262,7 @@ export default function AdminCollegesPage() {
           </div>
 
           <div className="flex items-center gap-6">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.partnerCollege} onChange={(e) => setForm((p) => ({ ...p, partnerCollege: e.target.checked }))} className="h-4 w-4 rounded" /> Partner College</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.partnerCollege} onChange={(e) => setForm((p) => ({ ...p, partnerCollege: e.target.checked, budget: e.target.checked ? p.budget : 0 }))} className="h-4 w-4 rounded" /> Partner College</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isPublished} onChange={(e) => setForm((p) => ({ ...p, isPublished: e.target.checked }))} className="h-4 w-4 rounded" /> Published</label>
           </div>
 

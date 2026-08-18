@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
 
   if (isAgentRoute) {
     if (!session) {
-      return NextResponse.redirect(new URL("/auth/agent", request.url));
+      return NextResponse.redirect(new URL("/auth/sign-in", request.url));
     }
     if (session.role !== "agent" && session.role !== "admin") {
       return NextResponse.redirect(new URL("/student/dashboard", request.url));
@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
 
   if (isAdminRoute) {
     if (!session) {
-      return NextResponse.redirect(new URL("/auth/admin", request.url));
+      return NextResponse.redirect(new URL("/auth/sign-in", request.url));
     }
     if (session.role !== "admin") {
       if (session.role === "agent") return NextResponse.redirect(new URL("/agent/dashboard", request.url));
