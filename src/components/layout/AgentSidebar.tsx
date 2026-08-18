@@ -3,9 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database } from "lucide-react";
+import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
+import { useRouter } from "next/navigation";
 
 const leadNavItems = [
   { title: "Telecaller Dashboard", href: "/agent/dashboard", icon: LayoutDashboard },
@@ -30,6 +31,8 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const authUser = useAppStore((s) => s.authUser);
+  const signOut = useAppStore((s) => s.signOut);
+  const router = useRouter();
 
   const filter = searchParams.get("filter");
   const agentName = authUser?.name || "Agent";
@@ -130,6 +133,13 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
               <p className="truncate text-sm font-medium">{agentName}</p>
               <p className="text-xs text-gold-400">Telecaller · On call</p>
             </div>
+            <button
+              onClick={() => { signOut(); router.push("/"); }}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-red-500/20 hover:text-red-400"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
