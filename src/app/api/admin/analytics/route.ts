@@ -3,9 +3,9 @@ import { getSessionFromCookie } from "@/server/auth";
 import { db } from "@/server/db";
 import {
   leads, agents, contacts, applications,
-  rawStudents,
+  rawStudents, users,
 } from "@/server/db/schema";
-import { eq, count, sql, desc } from "drizzle-orm";
+import { eq, count, desc, inArray } from "drizzle-orm";
 
 export async function GET() {
   const start = Date.now();
@@ -50,18 +50,26 @@ export async function GET() {
           agentName: string | null;
         }[] = [];
         try {
-          leaderboard = await db
-            .select({
-              agentId: agents.id,
-              userId: agents.id,
-              leadsAssigned: agents.leadsAssigned,
-              callsMade: agents.callsMade,
-              callsConnected: agents.callsConnected,
-              conversions: agents.conversions,
-              agentName: sql<string>`(SELECT name FROM users WHERE users.id = ${agents.id})`,
-            })
+          const agentRows = await db
+            .select()
             .from(agents)
             .orderBy(desc(agents.conversions));
+          const agentUserIds = agentRows.map((a) => a.id);
+          const agentUsers = agentUserIds.length > 0
+            ? await db.select({ id: users.id, name: users.name }).from(users).where(
+                inArray(users.id, agentUserIds)
+              )
+            : [];
+          const nameMap = new Map(agentUsers.map((u) => [u.id, u.name]));
+          leaderboard = agentRows.map((a) => ({
+            agentId: a.id,
+            userId: a.id,
+            leadsAssigned: a.leadsAssigned,
+            callsMade: a.callsMade,
+            callsConnected: a.callsConnected,
+            conversions: a.conversions,
+            agentName: nameMap.get(a.id) ?? null,
+          }));
         } catch {
           leaderboard = [];
         }
