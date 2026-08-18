@@ -11,7 +11,7 @@ const navLinks = [
   { label: "Colleges", href: "#colleges" },
   { label: "How it works", href: "/journey" },
   { label: "Scholarships", href: "/scholarship" },
-  { label: "ROI", href: "#roi" },
+  { label: "Fees & Placements", href: "#colleges" },
 ];
 
 export function Logo() {

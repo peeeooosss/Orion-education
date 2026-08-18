@@ -40,6 +40,12 @@ const intentColors: Record<string, string> = {
   Cold: "bg-slate-100 text-slate-600",
 };
 
+const leadTypeBadge: Record<string, { label: string; cls: string }> = {
+  scholarship: { label: "Scholarship", cls: "bg-gold-100 text-gold-700" },
+  enquiry: { label: "Enquiry only", cls: "bg-blue-100 text-blue-700" },
+  raw: { label: "Raw cold-call", cls: "bg-slate-200 text-slate-700" },
+};
+
 export function LeadDetailModal({
   lead,
   open,
@@ -53,6 +59,7 @@ export function LeadDetailModal({
 }) {
   const updateLeadStatus = useAppStore((s) => s.updateLeadStatus);
   const markCallConnected = useAppStore((s) => s.markCallConnected);
+  const markScholarshipApplied = useAppStore((s) => s.markScholarshipApplied);
   const [copied, setCopied] = useState(false);
   const [copiedWa, setCopiedWa] = useState(false);
 
@@ -64,9 +71,12 @@ export function LeadDetailModal({
     targetCollege: lead.targetCollege,
     lookingFor: lead.lookingFor,
     agentName: "Rohit",
+    scholarshipApplied: lead.scholarshipApplied,
   });
 
-  const waText = `Hi ${lead.name}! This is Rohit from Orion Education. I can see you've unlocked ${formatINR(lead.scholarshipUnlocked)} towards ${lead.targetCollege}. Shall I help you with ${lead.lookingFor.toLowerCase()}?`;
+  const waText = lead.scholarshipApplied
+    ? `Hi ${lead.name}! This is Rohit from Orion Education. I can see you've unlocked ${formatINR(lead.scholarshipUnlocked)} towards ${lead.targetCollege}. Shall I help you with ${lead.lookingFor.toLowerCase()}?`
+    : `Hi ${lead.name}! This is Rohit from Orion Education. Thanks for your enquiry about ${lead.targetCollege}. I can also check if you're eligible for an assured scholarship up to ₹60,000 — shall I?`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -80,6 +90,9 @@ export function LeadDetailModal({
               <div className="flex items-center gap-2">
                 <p className="text-base font-bold text-brand-950">{lead.name}</p>
                 <Badge className={intentColors[lead.intentLevel]}>{lead.intentLevel} intent</Badge>
+                <Badge className={leadTypeBadge[lead.leadType]?.cls ?? "bg-slate-100 text-slate-600"}>
+                  {leadTypeBadge[lead.leadType]?.label ?? lead.leadType}
+                </Badge>
                 {lead.intentOverride && <Badge className="bg-brand-100 text-brand-700">Agent override</Badge>}
                 {lead.callConnected && (
                   <Badge className="bg-green-100 text-green-700">
@@ -98,10 +111,18 @@ export function LeadDetailModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-brand-gradient p-4 text-white">
               <p className="flex items-center gap-1.5 text-xs text-white/60">
-                <TicketPercent className="h-3.5 w-3.5 text-gold-400" /> Unlocked scholarship
+                <TicketPercent className="h-3.5 w-3.5 text-gold-400" /> {lead.scholarshipApplied ? "Scholarship applied" : "Scholarship status"}
               </p>
               <p className="mt-1 font-heading text-3xl font-black text-gold-400">{formatINR(lead.scholarshipUnlocked)}</p>
-              <p className="mt-1 text-[10px] text-white/50">Assured · 48h validity</p>
+              <p className="mt-1 text-[10px] text-white/50">{lead.scholarshipApplied ? "Assured · 48h validity" : "Estimated eligibility — not applied"}</p>
+              {!lead.scholarshipApplied && (
+                <button
+                  onClick={() => markScholarshipApplied(lead.id)}
+                  className="mt-3 w-full rounded-lg bg-gold-500 px-3 py-2 text-xs font-bold text-brand-950 transition-colors hover:bg-gold-400"
+                >
+                  <TicketPercent className="mr-1 inline h-3.5 w-3.5" /> Mark scholarship applied
+                </button>
+              )}
             </div>
             <div className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs text-slate-500">Looking for</p>

@@ -578,7 +578,7 @@ export const SEED_AGENTS: Agent[] = [
   { id: "a4", name: "Sara Khan", avatarColor: "from-gold-500 to-brand-950", leadsAssigned: 35, callsMade: 119, callsConnected: 74, conversions: 16 },
 ];
 
-export const SEED_LEADS: Lead[] = [
+const RAW_SEED_LEADS: Omit<Lead, "leadType" | "scholarshipApplied">[] = [
   { id: "l1", name: "Rohan Desai", phone: "+91 98765 43210", email: "rohan.d@gmail.com", intentLevel: "Hot", scholarshipUnlocked: 25000, lookingFor: "Admission Process & Loan", targetCollege: "RV College of Engineering", status: "New", callConnected: false, source: "Scholarship Checker", createdAt: daysAgo(0, 9), agent: "Rohit Verma" },
   { id: "l2", name: "Priya Sharma", phone: "+91 99880 11223", email: "priya.sh@gmail.com", intentLevel: "Hot", scholarshipUnlocked: 60000, lookingFor: "Scholarship & Hostel", targetCollege: "NMIMS University", status: "New", callConnected: false, source: "Scholarship Checker", createdAt: daysAgo(0, 10), agent: "Priya Nair" },
   { id: "l3", name: "Arjun Mehta", phone: "+91 91234 56789", email: "arjun.m@gmail.com", intentLevel: "Warm", scholarshipUnlocked: 24000, lookingFor: "College Comparison", targetCollege: "Manipal Institute of Technology", status: "Contacted", callConnected: true, source: "College Enquiry", createdAt: daysAgo(1, 15), agent: "Aman Gupta" },
@@ -595,6 +595,12 @@ export const SEED_LEADS: Lead[] = [
   { id: "l14", name: "Nandita Bora", phone: "+91 98640 22114", email: "nandita.bora@gmail.com", intentLevel: "Warm", scholarshipUnlocked: 48000, lookingFor: "PGDM Fees & Hostel", targetCollege: "Doon Business School", status: "Application Started", callConnected: true, source: "College Enquiry", createdAt: daysAgo(2, 14), agent: "Rohit Verma" },
   { id: "l15", name: "Rahul Das", phone: "+91 99541 77432", email: "rahul.das@gmail.com", intentLevel: "Hot", scholarshipUnlocked: 50000, lookingFor: "MBA Application Help", targetCollege: "GNIOT Institute of Management Studies", status: "Offer Received", callConnected: true, source: "Scholarship Checker", createdAt: daysAgo(4, 12), agent: "Sara Khan" },
 ];
+
+export const SEED_LEADS: Lead[] = RAW_SEED_LEADS.map((lead) => ({
+  ...lead,
+  leadType: lead.source === "Scholarship Checker" ? "scholarship" : lead.source === "College Enquiry" ? "enquiry" : "raw",
+  scholarshipApplied: lead.source === "Scholarship Checker",
+}));
 
 export const SEED_APPLICATIONS: Application[] = [
   {
@@ -791,24 +797,26 @@ export const SEED_VOUCHERS: Voucher[] = [
   {
     id: "v1",
     code: "ORN-4F7K-2026",
-    studentName: "Aarav Patel",
-    phone: "+91 98765 12345",
+    studentName: "Demo Student",
+    phone: "+91 90000 00000",
     college: "RV College of Engineering",
     program: "B.E. Computer Science",
-    amount: 25000,
+    amount: 48000,
     issuedAt: daysAgo(3),
+    expiresAt: (() => { const d = new Date(); d.setDate(d.getDate() - 3 + 180); return d.toISOString(); })(),
     status: "Active",
-  },
-  {
-    id: "v2",
-    code: "ORN-9Q2M-2026",
-    studentName: "Aarav Patel",
-    phone: "+91 98765 12345",
-    college: "NMIMS University",
-    program: "MBA Core",
-    amount: 60000,
-    issuedAt: daysAgo(1),
-    status: "Claimed",
+    primaryCollege: "RV College of Engineering",
+    stream: "Engineering",
+    perCollegeBreakdown: [
+      { collegeId: "rvce", collegeName: "RV College of Engineering", amount: 48000 },
+      { collegeId: "bmsce", collegeName: "BMS College of Engineering", amount: 36000 },
+      { collegeId: "christ", collegeName: "Christ University", amount: 36000 },
+      { collegeId: "manipal", collegeName: "Manipal Academy of Higher Education", amount: 48000 },
+      { collegeId: "nmims", collegeName: "NMIMS University", amount: 48000 },
+      { collegeId: "dtu", collegeName: "Delhi Technological University", amount: 36000 },
+      { collegeId: "nid", collegeName: "National Institute of Design", amount: 36000 },
+      { collegeId: "sjcc", collegeName: "St. Joseph's College of Commerce", amount: 24000 },
+    ],
   },
 ];
 

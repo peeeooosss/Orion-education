@@ -35,7 +35,7 @@ export default function AdminPaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold text-brand-950">Scholarship payments</h1><p className="mt-1 text-sm text-slate-600">₹49 scholarship purchases, consultation and lead creation.</p></div>
+      <div><h1 className="text-2xl font-bold text-brand-950">Scholarship payments</h1><p className="mt-1 text-sm text-slate-600">₹99 scholarship purchases, consultation and lead creation.</p></div>
 
       <div className="grid gap-4 sm:grid-cols-4">
         {[{ label: "Paid students", value: paidStudents, tone: "bg-green-100 text-green-700", icon: Users2 }, { label: "Total demo collection", value: formatINR(totalCollection), tone: "bg-brand-950 text-gold-400", icon: IndianRupee }, { label: "Paid today", value: paidToday, tone: "bg-gold-100 text-gold-700", icon: TicketPercent }, { label: "Lead connected", value: paidLeadCount, tone: "bg-blue-100 text-blue-700", icon: Users2 }].map((m) => (

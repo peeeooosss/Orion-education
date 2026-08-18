@@ -32,12 +32,49 @@ import { timeAgo } from "@/lib/time";
 import { telLink, waLink } from "@/lib/wa";
 import { formatINR, useAppStore } from "@/store/useAppStore";
 import { LEAD_STATUSES, isConverted } from "@/lib/scholarship";
-import type { CallStatus, Lead } from "@/store/types";
+import type { CallStatus, Lead, LeadType } from "@/store/types";
 import { LeadDetailModal } from "./LeadDetailModal";
 import { StartApplicationModal } from "./StartApplicationModal";
 
 const STATUSES: Lead["status"][] = [...LEAD_STATUSES];
 const CALL_STATUS_OPTIONS: CallStatus[] = ["Not Called", "Connected", "No Answer", "Busy", "Call Back Requested", "WhatsApp Sent", "Wrong Number", "Do Not Call"];
+
+const leadTypeMeta: Record<LeadType, { label: string; badge: string }> = {
+  scholarship: { label: "Scholarship", badge: "bg-gold-100 text-gold-700" },
+  enquiry: { label: "Enquiry", badge: "bg-blue-100 text-blue-700" },
+  raw: { label: "Raw cold-call", badge: "bg-slate-200 text-slate-700" },
+};
+
+const TYPE_FILTERS: { key: "all" | LeadType; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "scholarship", label: "Scholarship" },
+  { key: "enquiry", label: "Enquiry only" },
+  { key: "raw", label: "Raw cold-call" },
+];
+
+function LeadTypeBadge({ type }: { type: LeadType }) {
+  return <Badge className={leadTypeMeta[type].badge}>{leadTypeMeta[type].label}</Badge>;
+}
+
+function ScholarshipCell({ lead, onPush }: { lead: Lead; onPush: (lead: Lead) => void }) {
+  if (lead.scholarshipApplied) {
+    return (
+      <span className="inline-flex items-center gap-1.5 font-semibold text-green-700">
+        <CheckCircle2 className="h-3.5 w-3.5" />
+        <span className="font-bold text-gold-600">{formatINR(lead.scholarshipUnlocked)}</span>
+      </span>
+    );
+  }
+  return (
+    <button
+      onClick={() => onPush(lead)}
+      className="inline-flex items-center gap-1.5 rounded-full border border-gold-500 px-2.5 py-1 text-xs font-semibold text-gold-700 transition-colors hover:bg-gold-50"
+      title="Ask student about scholarship and mark it applied"
+    >
+      <TicketPercent className="h-3.5 w-3.5" /> Push to scholarship
+    </button>
+  );
+}
 
 const intentColors: Record<string, string> = {
   Hot: "bg-red-100 text-red-700",
@@ -66,21 +103,23 @@ function LeadTable({
   lastAddedId,
   onOpen,
   onStartApplication,
+  onPush,
 }: {
   leads: Lead[];
   lastAddedId: string | null;
   onOpen: (lead: Lead) => void;
   onStartApplication: (lead: Lead) => void;
+  onPush: (lead: Lead) => void;
 }) {
   const updateLeadStatus = useAppStore((s) => s.updateLeadStatus);
   const updateLeadEngagement = useAppStore((s) => s.updateLeadEngagement);
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-      <table className="w-full min-w-[880px]">
+      <table className="w-full min-w-[1040px]">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50/60">
-            {["Student", "Intent", "Scholarship", "Looking for", "Target College", "Status", "Call Status", "Actions"].map((col) => (
+            {["Student", "Type", "Intent", "Scholarship", "Looking for", "Target College", "Status", "Call Status", "Actions"].map((col) => (
               <th key={col} className="p-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 {col}
               </th>
@@ -115,13 +154,13 @@ function LeadTable({
                     </button>
                   </td>
                   <td className="p-3.5">
+                    <LeadTypeBadge type={lead.leadType} />
+                  </td>
+                  <td className="p-3.5">
                     <Badge className={intentColors[lead.intentLevel]}>{lead.intentLevel}</Badge>
                   </td>
                   <td className="p-3.5">
-                    <span className="inline-flex items-center gap-1 font-semibold text-gold-600">
-                      <TicketPercent className="h-3.5 w-3.5" />
-                      {formatINR(lead.scholarshipUnlocked)}
-                    </span>
+                    <ScholarshipCell lead={lead} onPush={onPush} />
                   </td>
                   <td className="p-3.5 text-sm text-slate-700">{lead.lookingFor}</td>
                   <td className="p-3.5 text-sm text-slate-700">{lead.targetCollege}</td>
@@ -191,11 +230,13 @@ function KanbanCard({
   isNew,
   onOpen,
   onStartApplication,
+  onPush,
 }: {
   lead: Lead;
   isNew: boolean;
   onOpen: (lead: Lead) => void;
   onStartApplication: (lead: Lead) => void;
+  onPush: (lead: Lead) => void;
 }) {
   const markCallConnected = useAppStore((s) => s.markCallConnected);
   return (
@@ -221,12 +262,24 @@ function KanbanCard({
         </div>
         <Badge className={intentColors[lead.intentLevel]}>{lead.intentLevel}</Badge>
       </div>
+      <div className="mt-2 flex items-center gap-2">
+        <LeadTypeBadge type={lead.leadType} />
+      </div>
       <p className="mt-2.5 text-xs text-slate-600">{lead.targetCollege}</p>
       <p className="text-xs text-slate-500">Wants: {lead.lookingFor}</p>
       <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2.5">
-        <span className="flex items-center gap-1 text-sm font-bold text-gold-600">
-          <TicketPercent className="h-3.5 w-3.5" /> {formatINR(lead.scholarshipUnlocked)}
-        </span>
+        {lead.scholarshipApplied ? (
+          <span className="flex items-center gap-1 text-sm font-bold text-gold-600">
+            <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> {formatINR(lead.scholarshipUnlocked)}
+          </span>
+        ) : (
+          <button
+            onClick={(e) => { e.stopPropagation(); onPush(lead); }}
+            className="flex items-center gap-1 rounded-lg border border-gold-500 bg-gold-50 px-1.5 py-1 text-[10px] font-bold text-gold-700"
+          >
+            <TicketPercent className="h-3 w-3" /> Push scholarship
+          </button>
+        )}
         <div className="flex items-center gap-1">
           <a href={telLink(lead.phone)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
             <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-brand-950 text-brand-950 hover:bg-brand-950 hover:text-white">
@@ -267,12 +320,14 @@ function LeadKanban({
   lastAddedId,
   onOpen,
   onStartApplication,
+  onPush,
   onDragEnd,
 }: {
   leads: Lead[];
   lastAddedId: string | null;
   onOpen: (lead: Lead) => void;
   onStartApplication: (lead: Lead) => void;
+  onPush: (lead: Lead) => void;
   onDragEnd: (result: DropResult) => void;
 }) {
   return (
@@ -305,7 +360,7 @@ function LeadKanban({
                             {...dragProvided.dragHandleProps}
                             className={snapshot.isDragging ? "rotate-1 shadow-xl" : ""}
                           >
-                            <KanbanCard lead={lead} isNew={lead.id === lastAddedId} onOpen={onOpen} onStartApplication={onStartApplication} />
+                            <KanbanCard lead={lead} isNew={lead.id === lastAddedId} onOpen={onOpen} onStartApplication={onStartApplication} onPush={onPush} />
                           </div>
                         )}
                       </Draggable>
@@ -326,10 +381,12 @@ export function LeadsBoard() {
   const searchParams = useSearchParams();
   const leads = useAppStore((s) => s.leads);
   const updateLeadStatus = useAppStore((s) => s.updateLeadStatus);
+  const markScholarshipApplied = useAppStore((s) => s.markScholarshipApplied);
   const lastAddedId = useAppStore((s) => s.lastAddedLeadId);
   const clearLastAdded = useAppStore((s) => s.clearLastAddedLead);
 
   const [view, setView] = React.useState<"table" | "kanban">("table");
+  const [typeFilter, setTypeFilter] = React.useState<"all" | LeadType>("all");
   const [selectedLead, setSelectedLead] = React.useState<Lead | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [applyLead, setApplyLead] = React.useState<Lead | null>(null);
@@ -338,11 +395,13 @@ export function LeadsBoard() {
   const filter = searchParams.get("filter") ?? "all";
 
   const filtered = React.useMemo(() => {
-    if (filter === "new") return leads.filter((l) => l.status === "New");
-    if (filter === "hot") return leads.filter((l) => l.intentLevel === "Hot");
-    if (filter === "contacted") return leads.filter((l) => l.status === "Contacted" || l.callConnected);
-    return leads;
-  }, [leads, filter]);
+    let result = leads;
+    if (filter === "new") result = result.filter((l) => l.status === "New");
+    if (filter === "hot") result = result.filter((l) => l.intentLevel === "Hot");
+    if (filter === "contacted") result = result.filter((l) => l.status === "Contacted" || l.callConnected);
+    if (typeFilter !== "all") result = result.filter((l) => l.leadType === typeFilter);
+    return result;
+  }, [leads, filter, typeFilter]);
 
   const newLead = leads.find((l) => l.id === lastAddedId) ?? null;
 
@@ -372,6 +431,10 @@ export function LeadsBoard() {
   function startApplication(lead: Lead) {
     setApplyLead(lead);
     setApplyOpen(true);
+  }
+
+  function pushToScholarship(lead: Lead) {
+    markScholarshipApplied(lead.id);
   }
 
   React.useEffect(() => {
@@ -409,6 +472,23 @@ export function LeadsBoard() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {TYPE_FILTERS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTypeFilter(t.key)}
+            className={cn(
+              "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+              typeFilter === t.key
+                ? "border-brand-950 bg-brand-950 text-gold-400"
+                : "border-slate-200 bg-white text-slate-600 hover:border-gold-400"
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
@@ -454,9 +534,9 @@ export function LeadsBoard() {
           <p className="text-xs text-slate-500">Submit an enquiry on the student site and it will appear here instantly.</p>
         </div>
       ) : view === "table" ? (
-        <LeadTable leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} />
+        <LeadTable leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} />
       ) : (
-        <LeadKanban leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onDragEnd={handleDragEnd} />
+        <LeadKanban leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} onDragEnd={handleDragEnd} />
       )}
 
       <LeadDetailModal lead={selectedLead} open={modalOpen} onOpenChange={setModalOpen} onStartApplication={startApplication} />

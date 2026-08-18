@@ -3,13 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, BadgeCheck, BadgePercent, Building2, Calendar, GraduationCap, MapPin, PhoneCall, Star, Users } from "lucide-react";
+import { ArrowLeft, BadgeCheck, BadgePercent, Building2, Calendar, ExternalLink, GraduationCap, MapPin, PhoneCall, Star, Users } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { ZoneSwitcher } from "@/components/layout/ZoneSwitcher";
-import { ROICalculator } from "@/components/college/ROICalculator";
+import { ProgramFacts } from "@/components/college/ProgramFacts";
 import { CampusReels } from "@/components/college/CampusReels";
 import { SmartEnquiryModal } from "@/components/college/SmartEnquiryModal";
+import { EnquirySidebar } from "@/components/college/EnquirySidebar";
+import { VisitWebsiteModal } from "@/components/college/VisitWebsiteModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppStore, formatINR } from "@/store/useAppStore";
@@ -20,6 +22,7 @@ export default function CollegeDetailPage() {
   const college = useAppStore((s) => s.colleges.find((c) => c.id === params.id));
   const profile = useAppStore((s) => s.studentProfile);
   const [enquiryOpen, setEnquiryOpen] = React.useState(false);
+  const [visitOpen, setVisitOpen] = React.useState(false);
 
   if (!college) {
     return (
@@ -82,6 +85,14 @@ export default function CollegeDetailPage() {
                     </span>
                   ))}
                 </div>
+                {college.sourceWebsite && (
+                  <button
+                    onClick={() => setVisitOpen(true)}
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition-colors hover:border-gold-400 hover:text-gold-300"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.75} /> Visit official website
+                  </button>
+                )}
               </div>
 
               <div className="flex gap-4">
@@ -137,10 +148,12 @@ export default function CollegeDetailPage() {
               </section>
 
               <CampusReels college={college} />
-              <ROICalculator college={college} />
+              <ProgramFacts college={college} />
             </div>
 
-            <div className="space-y-6">
+            <div className="sticky top-24 space-y-6 self-start">
+              <EnquirySidebar college={college} />
+
               <div className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
                 <div className="flex items-center gap-2">
                   <BadgePercent className="h-5 w-5 text-gold-700" strokeWidth={1.75} />
@@ -191,18 +204,31 @@ export default function CollegeDetailPage() {
               Scholarship up to ₹60,000 · {college.placementPct}% placement
             </p>
           </div>
-          <Button
-            onClick={() => setEnquiryOpen(true)}
-            variant="gold"
-            className="!h-11 !px-5 !text-base"
-          >
-            <PhoneCall className="h-4 w-4" strokeWidth={1.75} />
-            Get free counselling
-          </Button>
+          <div className="flex items-center gap-3">
+            {college.sourceWebsite && (
+              <Button
+                onClick={() => setVisitOpen(true)}
+                variant="outline"
+                className="!h-11 !px-5"
+              >
+                <ExternalLink className="h-4 w-4" strokeWidth={1.75} />
+                Visit website
+              </Button>
+            )}
+            <Button
+              onClick={() => setEnquiryOpen(true)}
+              variant="gold"
+              className="!h-11 !px-5 !text-base"
+            >
+              <PhoneCall className="h-4 w-4" strokeWidth={1.75} />
+              Get free counselling
+            </Button>
+          </div>
         </div>
       </div>
 
       <SmartEnquiryModal college={college} open={enquiryOpen} onOpenChange={setEnquiryOpen} />
+      <VisitWebsiteModal college={college} open={visitOpen} onOpenChange={setVisitOpen} />
       <ZoneSwitcher />
     </div>
   );

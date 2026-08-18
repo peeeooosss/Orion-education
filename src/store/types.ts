@@ -3,6 +3,7 @@ import type { IntentLevel, LeadStatus, ScoreBand, Stream } from "@/lib/scholarsh
 export type { IntentLevel, LeadStatus };
 
 export type LeadSource = "Scholarship Checker" | "College Enquiry" | "Imported Raw Data";
+export type LeadType = "scholarship" | "enquiry" | "raw";
 export type CallStatus = "Not Called" | "Call Started" | "Connected" | "No Answer" | "Busy" | "Call Back Requested" | "WhatsApp Sent" | "Wrong Number" | "Do Not Call";
 export type InterestStatus = "Not Assessed" | "Interested" | "Needs More Details" | "Parent Discussion" | "Fee Concern" | "Scholarship Focused" | "Placement Focused" | "Exam Result Pending" | "Not Interested" | "Qualified";
 export type NextAction = "Call Again" | "Send College Details" | "Send Fee Structure" | "Send Scholarship Details" | "Send Placement Details" | "Send WhatsApp Comparison" | "Talk to Parent" | "Book Counselling" | "Follow Up After Exam Result" | "Start Application" | "Close Record";
@@ -133,6 +134,30 @@ export interface Lead {
   rawDataId?: string;
   questionnaire?: StudentQuestionnaire;
   paymentStatus?: "Not Required" | "Pending" | "Paid";
+  leadType: LeadType;
+  scholarshipApplied: boolean;
+}
+
+export interface WebsiteVisitLead {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  collegeId: string;
+  collegeName: string;
+  program: string;
+  admissionTimeline: string;
+  createdAt: string;
+}
+
+export interface NewWebsiteVisitInput {
+  name: string;
+  phone: string;
+  email?: string;
+  collegeId: string;
+  collegeName: string;
+  program: string;
+  admissionTimeline: string;
 }
 
 export interface NewLeadInput {
@@ -233,7 +258,11 @@ export interface Voucher {
   program: string;
   amount: number;
   issuedAt: string;
-  status: "Active" | "Claimed" | "Expiring";
+  expiresAt: string;
+  status: "Active" | "Claimed" | "Expiring" | "Expired";
+  primaryCollege: string;
+  stream: string;
+  perCollegeBreakdown: { collegeId: string; collegeName: string; amount: number }[];
 }
 
 export interface StudentProfile {
@@ -299,6 +328,7 @@ export interface ScholarshipPayment {
   leadId?: string;
   assignedAgent?: string;
   collegeIds: string[];
+  primaryCollegeId?: string;
   createdAt: string;
   paidAt?: string;
   failureReason?: string;

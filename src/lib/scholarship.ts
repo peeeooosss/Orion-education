@@ -132,6 +132,12 @@ const SCRIPT_OPENERS = [
   "Your Orion scholarship voucher is ready, and I wanted to walk you through the next step.",
 ];
 
+const ENQUIRY_OPENERS = [
+  "I saw you requested free counselling on our site — I'm here to help.",
+  "Thanks for your enquiry with Orion — I've got everything you need to shortlist.",
+  "I'm calling about your enquiry — happy to walk you through fees and placements.",
+];
+
 const SCRIPT_CLOSERS = [
   "Should I block 15 minutes tomorrow to lock in this amount?",
   "I can reserve this scholarship amount for 48 hours — shall I?",
@@ -144,10 +150,14 @@ export function generateOpeningScript(lead: {
   targetCollege: string;
   lookingFor: string;
   agentName?: string;
+  scholarshipApplied?: boolean;
 }): string {
-  const opener = SCRIPT_OPENERS[Math.floor(Math.random() * SCRIPT_OPENERS.length)];
+  const opener = (lead.scholarshipApplied ? SCRIPT_OPENERS : ENQUIRY_OPENERS)[Math.floor(Math.random() * (lead.scholarshipApplied ? SCRIPT_OPENERS : ENQUIRY_OPENERS).length)];
   const closer = SCRIPT_CLOSERS[Math.floor(Math.random() * SCRIPT_CLOSERS.length)];
-  return `"Hi ${lead.name}, this is ${lead.agentName ?? "Rohit"} from Orion Education. ${opener} You've unlocked ₹${lead.scholarshipUnlocked.toLocaleString("en-IN")} towards ${lead.targetCollege}. I saw you're interested in ${lead.lookingFor.toLowerCase()}. ${closer}"`;
+  if (lead.scholarshipApplied) {
+    return `"Hi ${lead.name}, this is ${lead.agentName ?? "Rohit"} from Orion Education. ${opener} You've unlocked ₹${lead.scholarshipUnlocked.toLocaleString("en-IN")} towards ${lead.targetCollege}. I saw you're interested in ${lead.lookingFor.toLowerCase()}. ${closer}"`;
+  }
+  return `"Hi ${lead.name}, this is ${lead.agentName ?? "Rohit"} from Orion Education. ${opener} I saw you're interested in ${lead.lookingFor.toLowerCase()} at ${lead.targetCollege}. I can also check if you're eligible for an assured scholarship of up to ₹60,000 — shall I? ${closer}"`;
 }
 
 export const STREAM_OPTIONS: { value: Stream; label: string; emoji: string }[] = [

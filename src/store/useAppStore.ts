@@ -25,7 +25,9 @@ import type {
   College,
   Enquiry,
   Lead,
+  LeadType,
   NewLeadInput,
+  NewWebsiteVisitInput,
   RawDataBatch,
   RawStudentRecord,
   Remark,
@@ -33,7 +35,14 @@ import type {
   StudentProfile,
   StudentQuestionnaire,
   Voucher,
+  WebsiteVisitLead,
 } from "./types";
+
+function leadTypeFromSource(source: Lead["source"]): LeadType {
+  if (source === "Scholarship Checker") return "scholarship";
+  if (source === "Imported Raw Data") return "raw";
+  return "enquiry";
+}
 
 let uidCounter = 100;
 function uid(prefix: string): string {
@@ -115,6 +124,7 @@ interface AppState {
   studentProfile: StudentProfile;
   authUser: AuthUser | null;
   payments: ScholarshipPayment[];
+  websiteLeads: WebsiteVisitLead[];
   questionnaire: StudentQuestionnaire | null;
   lastAddedLeadId: string | null;
   clearLastAddedLead: () => void;
@@ -129,13 +139,15 @@ interface AppState {
   addLeadRemark: (id: string, input: Omit<Remark, "id" | "createdAt">) => void;
   updateCollegeScholarshipBudget: (collegeId: string, budget: number) => void;
   markCallConnected: (id: string) => void;
-  claimVoucher: (lead: Lead) => void;
+  claimVoucher: (lead: Lead, options?: { perCollegeBreakdown?: { collegeId: string; collegeName: string; amount: number }[]; primaryCollege?: string; stream?: string }) => void;
+  markScholarshipApplied: (leadId: string) => void;
+  addWebsiteVisitLead: (input: NewWebsiteVisitInput) => WebsiteVisitLead;
   setStudentProfile: (profile: StudentProfile) => void;
   signUp: (input: { name: string; email: string; phone: string; password: string; city?: string; state?: string }) => AuthUser;
   signIn: (input: { email: string; password: string }) => AuthUser | null;
   signOut: () => void;
   setQuestionnaire: (q: StudentQuestionnaire) => void;
-  createPayment: (input: { studentId: string; studentName: string; email: string; phone: string; collegeIds: string[] }) => ScholarshipPayment;
+  createPayment: (input: { studentId: string; studentName: string; email: string; phone: string; collegeIds: string[]; primaryCollegeId?: string }) => ScholarshipPayment;
   completePayment: (paymentId: string) => void;
   createDemoLeadFromPayment: (paymentId: string, questionnaire: StudentQuestionnaire) => Lead | null;
   startApplication: (input: StartApplicationInput) => Application | null;
@@ -157,6 +169,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   studentProfile: SEED_STUDENT_PROFILE,
   authUser: null,
   payments: [],
+  websiteLeads: [],
   questionnaire: null,
   lastAddedLeadId: null,
 
@@ -213,7 +226,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       studentName: input.studentName,
       email: input.email,
       phone: input.phone,
-      amount: 49,
+      amount: 99,
       currency: "INR",
       purpose: "Scholarship Check",
       status: "Initiated",
@@ -222,6 +235,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       scholarshipUnlocked: false,
       consultationEligible: false,
       collegeIds: input.collegeIds,
+      primaryCollegeId: input.primaryCollegeId,
       createdAt: new Date().toISOString(),
     };
     set((state) => ({ payments: [payment, ...state.payments] }));
@@ -237,7 +251,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const payment = state.payments.find((p) => p.id === paymentId);
     if (!payment) return null;
     const colleges = state.colleges.filter((c) => payment.collegeIds.includes(c.id));
-    const primaryCollege = colleges[0];
+    const primaryCollege = colleges.find((c) => c.id === payment.primaryCollegeId) ?? colleges[0];
     const agent = state.agents[Math.floor(Math.random() * state.agents.length)].name;
     const scoreBand = questionnaire.scoreBand ?? "75-90";
     const stream = questionnaire.stream ?? "MBA";
@@ -265,6 +279,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       intentReasons: intent.reasons,
       questionnaire,
       paymentStatus: "Paid",
+      leadType: "scholarship",
+      scholarshipApplied: true,
     };
     set((current) => ({
       leads: [lead, ...current.leads],
@@ -382,6 +398,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       intentOverrideReason: raw.intentOverrideReason,
       intentUpdatedBy: raw.intentUpdatedBy,
       intentUpdatedAt: raw.intentUpdatedAt,
+      leadType: "raw",
+      scholarshipApplied: false,
     };
     set((current) => ({
       leads: [lead, ...current.leads],
@@ -427,6 +445,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       intentScore: intent.score,
       intentReasons: intent.reasons,
       questionnaire: questionnaire?.completedAt ? questionnaire : undefined,
+      leadType: leadTypeFromSource(input.source),
+      scholarshipApplied: input.source === "Scholarship Checker",
     };
 
     set((state) => ({
@@ -491,7 +511,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       }),
     })),
 
-  claimVoucher: (lead) => {
+  claimVoucher: (lead, options) => {
+    const now = new Date();
+    const expires = new Date(now);
+    expires.setMonth(expires.getMonth() + 6);
     const voucher: Voucher = {
       id: uid("v"),
       code: `ORN-${Math.random().toString(36).slice(2, 6).toUpperCase()}-2026`,
@@ -500,8 +523,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       college: lead.targetCollege,
       program: lead.lookingFor,
       amount: lead.scholarshipUnlocked,
-      issuedAt: new Date().toISOString(),
+      issuedAt: now.toISOString(),
+      expiresAt: expires.toISOString(),
       status: "Active",
+      primaryCollege: options?.primaryCollege ?? lead.targetCollege,
+      stream: options?.stream ?? "",
+      perCollegeBreakdown: options?.perCollegeBreakdown ?? [],
     };
     set((state) => {
       const vouchers = [voucher, ...state.vouchers];
@@ -516,6 +543,31 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setStudentProfile: (profile) => set({ studentProfile: profile }),
+
+  markScholarshipApplied: (leadId) =>
+    set((state) => ({
+      leads: state.leads.map((lead) =>
+        lead.id === leadId
+          ? { ...lead, leadType: "scholarship" as LeadType, scholarshipApplied: true, nextAction: "Send Scholarship Details" as Lead["nextAction"] }
+          : lead
+      ),
+    })),
+
+  addWebsiteVisitLead: (input) => {
+    const record: WebsiteVisitLead = {
+      id: uid("wv"),
+      name: input.name,
+      phone: input.phone,
+      email: input.email,
+      collegeId: input.collegeId,
+      collegeName: input.collegeName,
+      program: input.program,
+      admissionTimeline: input.admissionTimeline,
+      createdAt: new Date().toISOString(),
+    };
+    set((state) => ({ websiteLeads: [record, ...state.websiteLeads] }));
+    return record;
+  },
 
   startApplication: (input) => {
     const state = get();
@@ -631,6 +683,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       studentProfile: SEED_STUDENT_PROFILE,
       authUser: null,
       payments: [],
+      websiteLeads: [],
       questionnaire: null,
       lastAddedLeadId: null,
     }),
