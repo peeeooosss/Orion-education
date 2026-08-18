@@ -31,8 +31,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Logged-in users shouldn't visit auth pages
   if (isAuthRoute && session) {
+    const url = new URL(request.url);
+    const returnTo = url.searchParams.get("returnTo");
+    if (returnTo) {
+      const allowed = returnTo.startsWith("/agent/") || returnTo.startsWith("/admin/") || returnTo.startsWith("/student/");
+      if (!allowed) return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+      return NextResponse.redirect(new URL(returnTo, request.url));
+    }
+    if (url.pathname === "/auth/sign-in" || url.pathname === "/auth/sign-up") {
+      return NextResponse.next();
+    }
     if (session.role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     if (session.role === "agent") return NextResponse.redirect(new URL("/agent/dashboard", request.url));
     return NextResponse.redirect(new URL("/student/dashboard", request.url));

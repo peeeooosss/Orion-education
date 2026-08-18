@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Phone, User } from "lucide-react";
+import { ExternalLink, Phone, User, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useAppStore";
 import type { College } from "@/store/types";
 
 const TIMELINES = ["This admission cycle", "Within 1 month", "Within 3 months", "Just exploring"];
@@ -32,26 +31,44 @@ interface VisitWebsiteModalProps {
 }
 
 export function VisitWebsiteModal({ college, open, onOpenChange }: VisitWebsiteModalProps) {
-  const addWebsiteVisitLead = useAppStore((s) => s.addWebsiteVisitLead);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [program, setProgram] = useState<string>(college.programs[0]?.name ?? "");
   const [timeline, setTimeline] = useState<string>(TIMELINES[0]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!name.trim() || phone.trim().length < 10) return;
-    addWebsiteVisitLead({
-      name: name.trim(),
-      phone: phone.trim(),
-      collegeId: college.id,
-      collegeName: college.name,
-      program,
-      admissionTimeline: timeline,
-    });
-    onOpenChange(false);
-    const target = college.sourceWebsite ?? "#";
-    if (target !== "#") {
-      window.open(target, "_blank", "noopener,noreferrer");
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/website-leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          program,
+          admissionTimeline: timeline,
+          collegeId: college.id,
+          collegeName: college.name,
+          sourceWebsite: college.sourceWebsite,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save lead");
+      }
+      onOpenChange(false);
+      const target = college.sourceWebsite ?? "#";
+      if (target && target !== "#") {
+        window.open(target, "_blank", "noopener,noreferrer");
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -102,6 +119,7 @@ export function VisitWebsiteModal({ college, open, onOpenChange }: VisitWebsiteM
               {TIMELINES.map((t) => (
                 <button
                   key={t}
+                  type="button"
                   onClick={() => setTimeline(t)}
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
@@ -114,8 +132,15 @@ export function VisitWebsiteModal({ college, open, onOpenChange }: VisitWebsiteM
             </div>
           </div>
 
-          <Button variant="gold" className="h-12 w-full" disabled={!name.trim() || phone.trim().length < 10} onClick={handleSubmit}>
-            <ExternalLink className="h-4 w-4" /> Continue to official website
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
+          )}
+
+          <Button variant="gold" className="h-12 w-full" disabled={!name.trim() || phone.trim().length < 10 || loading} onClick={handleSubmit}>
+            <ExternalLink className="h-4 w-4" /> {loading ? "Saving..." : "Continue to official website"}
           </Button>
         </div>
       </DialogContent>

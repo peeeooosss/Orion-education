@@ -75,8 +75,15 @@ export function AdminDashboard() {
   const colleges = useAppStore((s) => s.colleges);
   const rawStudents = useAppStore((s) => s.rawStudents);
   const payments = useAppStore((s) => s.payments);
-  const websiteLeads = useAppStore((s) => s.websiteLeads);
   const paidCount = new Set(payments.filter((p) => p.status === "Paid").map((p) => p.studentId)).size;
+
+  const [websiteLeadCount, setWebsiteLeadCount] = React.useState(0);
+  React.useEffect(() => {
+    fetch("/api/website-leads?limit=1")
+      .then((r) => r.json())
+      .then((d) => setWebsiteLeadCount(d.count ?? 0))
+      .catch(() => {});
+  }, []);
 
   const chartData = React.useMemo(() => buildWeeklyBuckets(enquiries), [enquiries]);
 
@@ -132,7 +139,7 @@ export function AdminDashboard() {
         <Card className="border-slate-200 bg-white shadow-sm"><CardContent className="flex items-center justify-between p-5"><div><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Website lead queue</p><p className="mt-1 font-heading text-2xl font-bold text-brand-950">{leads.filter((lead) => lead.source !== "Imported Raw Data").length}</p><p className="mt-1 text-xs text-slate-500">Scholarship Checker and College Enquiry</p></div><Link href="/agent/dashboard" className="text-xs font-semibold text-gold-700 hover:underline">Open agent queue →</Link></CardContent></Card>
         <Card className="border-slate-200 bg-white shadow-sm"><CardContent className="flex items-center justify-between p-5"><div><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Scholarship payments</p><p className="mt-1 font-heading text-2xl font-bold text-brand-950">{paidCount}</p><p className="mt-1 text-xs text-slate-500">paid students</p></div><Link href="/admin/payments" className="text-xs font-semibold text-gold-700 hover:underline">View payments →</Link></CardContent></Card>
         <Card className="border-slate-200 bg-white shadow-sm"><CardContent className="flex items-center justify-between p-5"><div><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Imported student queue</p><p className="mt-1 font-heading text-2xl font-bold text-brand-950">{rawStudents.filter((student) => !student.leadId).length}</p><p className="mt-1 text-xs text-slate-500">{rawStudents.filter((student) => student.leadId).length} converted to leads</p></div><Link href="/admin/raw-data" className="text-xs font-semibold text-gold-700 hover:underline">Manage raw data →</Link></CardContent></Card>
-        <Card className="border-slate-200 bg-white shadow-sm"><CardContent className="flex items-center justify-between p-5"><div><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Website visits</p><p className="mt-1 font-heading text-2xl font-bold text-brand-950">{websiteLeads.length}</p><p className="mt-1 text-xs text-slate-500">captured before redirect</p></div><Link href="/admin/website-leads" className="text-xs font-semibold text-gold-700 hover:underline">View website leads →</Link></CardContent></Card>
+        <Card className="border-slate-200 bg-white shadow-sm"><CardContent className="flex items-center justify-between p-5"><div><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Website visits</p><p className="mt-1 font-heading text-2xl font-bold text-brand-950">{websiteLeadCount}</p><p className="mt-1 text-xs text-slate-500">captured before redirect</p></div><Link href="/admin/website-leads" className="text-xs font-semibold text-gold-700 hover:underline">View website leads →</Link></CardContent></Card>
       </div>
 
       <div id="analytics" className="scroll-mt-6 grid gap-6 lg:grid-cols-3">

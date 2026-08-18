@@ -29,6 +29,7 @@ const stmts = [
   `CREATE TABLE IF NOT EXISTS agent_daily_stats (id text PRIMARY KEY, agent_id text NOT NULL REFERENCES agents(id), date date NOT NULL, calls_made integer DEFAULT 0, calls_connected integer DEFAULT 0, leads_qualified integer DEFAULT 0, leads_applied integer DEFAULT 0, leads_admitted integer DEFAULT 0)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS agent_daily_stats_agent_date_idx ON agent_daily_stats(agent_id, date)`,
   `CREATE TABLE IF NOT EXISTS daily_metrics (id text PRIMARY KEY, date date NOT NULL UNIQUE, total_leads integer DEFAULT 0, new_leads integer DEFAULT 0, total_calls integer DEFAULT 0, total_connected integer DEFAULT 0, total_qualified integer DEFAULT 0, total_applied integer DEFAULT 0, total_admitted integer DEFAULT 0, total_lost integer DEFAULT 0, scholarship_revenue numeric DEFAULT '0', budget_used numeric DEFAULT '0', created_at timestamptz NOT NULL DEFAULT now())`,
+  `CREATE TABLE IF NOT EXISTS website_leads (id text PRIMARY KEY, name text NOT NULL, phone text NOT NULL, email text, college_id text REFERENCES colleges(id), college_name text, program text, admission_timeline text, source_website text, user_id text REFERENCES users(id), created_at timestamptz NOT NULL DEFAULT now())`,
 ];
 
 async function main() {

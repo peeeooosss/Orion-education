@@ -56,7 +56,7 @@ export function RoleLoginForm() {
       const user = data.user as Record<string, string> | undefined;
       const userRole = user?.role as string | undefined;
       const returnTo = searchParams.get("returnTo");
-      router.push(returnTo || ROLE_HREF[userRole || "student"] || "/student/dashboard");
+      router.replace(returnTo || ROLE_HREF[userRole || "student"] || "/student/dashboard");
     } catch (err: unknown) {
       clearTimeout(timeout);
       if (err instanceof DOMException && err.name === "AbortError") {

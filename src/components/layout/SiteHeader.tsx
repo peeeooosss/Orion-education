@@ -127,6 +127,9 @@ export function SiteHeader() {
                     </Link>
                   ))}
                   <div className="my-1 h-px bg-surface-200" />
+                  <Link href="/auth/sign-in" onClick={async () => { await signOut(); setMenuOpen(false); }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-surface-700 hover:bg-surface-100">
+                    <User className="h-4 w-4 text-surface-400" /> Switch account
+                  </Link>
                   <button onClick={async () => { await signOut(); setMenuOpen(false); router.push("/auth/sign-in"); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4" /> Sign Out</button>
                 </div>
               )}
@@ -152,6 +155,7 @@ export function SiteHeader() {
           {authUser ? (
             <>
               <Link href={portal?.href || "/student/dashboard"} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">{portal?.label || "Portal"}</Link>
+              <Link href="/auth/sign-in" onClick={async () => { await signOut(); setOpen(false); }} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">Switch account</Link>
               <button onClick={async () => { await signOut(); setOpen(false); router.push("/auth/sign-in"); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50">Sign Out</button>
             </>
           ) : (

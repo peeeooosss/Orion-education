@@ -334,3 +334,18 @@ export const dailyMetrics = pgTable("daily_metrics", {
   budgetUsed: numeric("budget_used").default("0"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ─── Website Visit Leads ───────────────────────────────────
+export const websiteLeads = pgTable("website_leads", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  collegeId: text("college_id").references(() => colleges.id),
+  collegeName: text("college_name"),
+  program: text("program"),
+  admissionTimeline: text("admission_timeline"),
+  sourceWebsite: text("source_website"),
+  userId: text("user_id").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
