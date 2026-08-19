@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Headphones, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlobalEnquiryModal } from "./GlobalEnquiryModal";
 
@@ -21,12 +21,15 @@ export function GlobalEnquiryWidget() {
           )}
           aria-label="Free Enquiry"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-gold-500 to-gold-600 text-brand-950 shadow-lg shadow-gold-500/30">
-            <Sparkles className="h-5 w-5" />
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-gold-400 via-gold-500 to-gold-600 text-brand-950 shadow-lg shadow-gold-500/30">
+            <UserRound className="h-6 w-6" strokeWidth={1.8} />
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-brand-950 text-gold-400">
+              <Headphones className="h-2.5 w-2.5" strokeWidth={2.2} />
+            </span>
           </div>
         </button>
         <div className="mt-2 text-center">
-          <span className="block text-xs font-semibold uppercase tracking-wider text-surface-600">
+          <span className="block text-[10px] font-semibold tracking-wide text-surface-600">
             Free Enquiry
           </span>
         </div>
@@ -44,11 +47,16 @@ export function GlobalEnquiryWidget() {
           )}
           aria-label="Free Enquiry"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-gold-500 to-gold-600 text-brand-950 shadow-lg shadow-gold-500/30">
-            <Sparkles className="h-4 w-4" />
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-gold-400 via-gold-500 to-gold-600 text-brand-950 shadow-lg shadow-gold-500/30">
+            <UserRound className="h-5 w-5" strokeWidth={1.8} />
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-brand-950 text-gold-400">
+              <Headphones className="h-2 w-2" strokeWidth={2.2} />
+            </span>
           </div>
-          <span className="sr-only">Free Enquiry</span>
         </button>
+        <span className="mt-1 block text-center text-[9px] font-semibold tracking-wide text-surface-600">
+          Free Enquiry
+        </span>
       </div>
 
       <GlobalEnquiryModal open={open} onOpenChange={setOpen} />
