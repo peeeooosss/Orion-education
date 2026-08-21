@@ -24,7 +24,7 @@ interface Props {
 export function StudentQuestionnaire({ onComplete }: Props) {
   const [step, setStep] = useState(0);
   const [scoreBand, setScoreBand] = useState<ScoreBand | null>(null);
-  const [stream, setStream] = useState<Stream | null>(null);
+  const [stream, setStream] = useState<Stream | null>("MBA");
   const [careerGoal, setCareerGoal] = useState("");
   const [admissionTimeline, setAdmissionTimeline] = useState("");
   const [preferredStates, setPreferredStates] = useState<string[]>([]);
@@ -80,9 +80,9 @@ export function StudentQuestionnaire({ onComplete }: Props) {
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Stream</Label>
+                <Label>Program type</Label>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {STREAM_OPTIONS.map((opt) => (
+                  {STREAM_OPTIONS.filter((opt) => opt.value === "MBA").map((opt) => (
                     <button key={opt.value} onClick={() => setStream(opt.value)} className={cn("flex flex-col items-center gap-1 rounded-xl border-2 p-3 text-center text-xs font-semibold transition-all", stream === opt.value ? "border-gold-500 bg-gold-50" : "border-surface-200 hover:border-gold-200")}>
                       <span className="text-lg">{opt.emoji}</span> {opt.label}
                     </button>

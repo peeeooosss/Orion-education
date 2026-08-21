@@ -16,15 +16,19 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { SCORE_OPTIONS, type ScoreBand } from "@/lib/scholarship";
 import { useAppStore } from "@/store/useAppStore";
-import type { College } from "@/store/types";
+import type { College, CollegeProgram } from "@/store/types";
 
 const NEEDS = ["Admission Process", "Scholarship", "Education Loan", "Hostel", "Campus Visit", "Career Advice"];
 
 interface SmartEnquiryModalProps {
-  college: College;
+  college: EnquiryCollege;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+export type EnquiryCollege = Pick<College, "id" | "shortName"> & {
+  programs: Pick<CollegeProgram, "name" | "stream">[];
+};
 
 export function SmartEnquiryModal({ college, open, onOpenChange }: SmartEnquiryModalProps) {
   const addLead = useAppStore((s) => s.addLead);

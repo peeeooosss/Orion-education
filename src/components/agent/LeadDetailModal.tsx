@@ -76,7 +76,7 @@ export function LeadDetailModal({
 
   const waText = lead.scholarshipApplied
     ? `Hi ${lead.name}! This is Rohit from Orion Education. I can see you've unlocked ${formatINR(lead.scholarshipUnlocked)} towards ${lead.targetCollege}. Shall I help you with ${lead.lookingFor.toLowerCase()}?`
-    : `Hi ${lead.name}! This is Rohit from Orion Education. Thanks for your enquiry about ${lead.targetCollege}. I can also check if you're eligible for an assured scholarship up to ₹60,000 — shall I?`;
+    : `Hi ${lead.name}! This is Rohit from Orion Education. Thanks for your enquiry about ${lead.targetCollege}. Shall I help you with ${lead.lookingFor.toLowerCase()}?`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

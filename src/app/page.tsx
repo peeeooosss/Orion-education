@@ -18,7 +18,6 @@ export default function HomePage() {
   const [search, setSearch] = React.useState("");
   const [stream, setStream] = React.useState<Stream | null>(null);
   const [city, setCity] = React.useState("");
-  const [exam, setExam] = React.useState("");
   const [sort, setSort] = React.useState<SortKey>("default");
 
   return (
@@ -32,11 +31,9 @@ export default function HomePage() {
           search={search}
           stream={stream}
           city={city}
-          exam={exam}
           sort={sort}
           onStream={setStream}
           onCity={setCity}
-          onExam={setExam}
           onSort={setSort}
         />
 
@@ -50,7 +47,7 @@ export default function HomePage() {
               </div>
               <div>
                 <p className="font-semibold text-surface-900">
-                  Scholarships up to ₹60,000 at partner colleges
+                  MBA &amp; PGDM scholarships up to ₹30,000 at partner colleges
                 </p>
                 <p className="text-sm text-surface-600">
                   Eligibility-backed, not a lottery — check yours in 30 seconds.

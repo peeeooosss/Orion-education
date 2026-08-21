@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Phone, Mail, Users, PhoneCall, PhoneOff, TrendingUp, FileStack, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Users, PhoneCall, TrendingUp, FileStack, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

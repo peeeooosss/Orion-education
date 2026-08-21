@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { STREAM_OPTIONS, type Stream } from "@/lib/scholarship";
+import { PARTNER_COLLEGE_COUNT } from "@/data/college-directory";
 
 const HERO_IMAGES = [
   {
@@ -26,8 +27,8 @@ const HERO_IMAGES = [
 
 const HERO_SLIDES = [
   {
-    title: "Assured scholarships up to ₹60,000",
-    body: "Eligibility-backed and unlocked in 30 seconds — no lottery, no paperwork.",
+    title: "Assured MBA & PGDM scholarships up to ₹30,000",
+    body: "Eligibility-backed at Orion partner colleges — no lottery, no paperwork.",
   },
   {
     title: "Verified fees, placements & ratings",
@@ -139,7 +140,7 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
             <span className="flex items-center gap-1 text-xs font-medium text-surface-300/60">
               <SlidersHorizontal className="h-3.5 w-3.5" /> Popular streams:
             </span>
-            {STREAM_OPTIONS.map((opt) => (
+            {STREAM_OPTIONS.filter((opt) => opt.value === "MBA").map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => pickStream(opt.value)}
@@ -157,7 +158,7 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {[
-              { value: "8", label: "partner colleges" },
+              { value: String(PARTNER_COLLEGE_COUNT), label: "partner colleges" },
               { value: "40+", label: "undergrad programs" },
               { value: "₹16L", label: "avg best package" },
             ].map((stat) => (

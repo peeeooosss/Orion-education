@@ -7,12 +7,10 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 
 import { ScholarshipUnlockChecker } from "@/components/scholarship/ScholarshipUnlockChecker";
-import { useAppStore, formatINR } from "@/store/useAppStore";
-import { estimateFromProfile } from "@/lib/scholarship";
+import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
 
 function ScholarshipPageContent() {
-  const colleges = useAppStore((s) => s.colleges);
-  const profile = useAppStore((s) => s.studentProfile);
+  const colleges = MBA_PGDM_COLLEGES.filter((college) => college.isPartnered && college.scholarshipAvailable);
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-50">
@@ -29,8 +27,8 @@ function ScholarshipPageContent() {
               Check your eligibility in 30 seconds
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-surface-300/70">
-              Unlock an eligibility-backed scholarship of up to ₹60,000 at any of our partner
-              colleges — no paperwork, no waiting.
+              Unlock an eligibility-backed scholarship of up to ₹30,000 for MBA and PGDM programs
+              at Orion partner colleges.
             </p>
           </div>
         </div>
@@ -41,27 +39,24 @@ function ScholarshipPageContent() {
           <section className="mt-14">
             <h2 className="font-display text-2xl font-bold text-surface-900">Which colleges offer scholarships?</h2>
             <p className="mt-1 text-sm text-surface-600">
-              Your estimated amount scales with your score and the college&apos;s rating.
+              Scholarship availability is limited to the blue-highlighted Orion partner colleges and their MBA/PGDM programs.
             </p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {colleges.map((college) => {
-                const estimate = estimateFromProfile(profile, college.rating);
                 return (
                   <Link
                     key={college.id}
                     href={`/scholarship?college=${college.id}`}
-                    className="group rounded-2xl border border-surface-200 bg-white p-5 shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-float"
+                    className="group rounded-2xl border-2 border-blue-200 bg-white p-5 shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-float"
                   >
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold text-surface-900">{college.shortName}</p>
-                      <span className="rounded-full bg-surface-100 px-2 py-0.5 text-[10px] font-medium text-surface-500">
-                        ★ {college.rating.toFixed(1)}
-                      </span>
+                      <p className="text-sm font-bold text-surface-900">{college.name}</p>
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Partner</span>
                     </div>
-                    <p className="mt-1 text-xs text-surface-500">{college.city}</p>
+                    <p className="mt-1 text-xs text-surface-500">{college.location}</p>
                     <div className="mt-4 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-gold-700">
-                        <BadgePercent className="h-4 w-4" strokeWidth={1.75} /> Up to {formatINR(estimate)}
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-700">
+                        <BadgePercent className="h-4 w-4" strokeWidth={1.75} /> Up to ₹{college.maxScholarship.toLocaleString("en-IN")}
                       </span>
                       <ArrowRight className="h-4 w-4 text-surface-300 transition-all group-hover:translate-x-0.5 group-hover:text-gold-500" />
                     </div>

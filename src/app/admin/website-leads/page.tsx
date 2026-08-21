@@ -44,6 +44,8 @@ export default function AdminWebsiteLeadsPage() {
     }
   }
 
+  // Load the server-backed list once when the admin view mounts.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => { loadLeads(); }, []);
 
   const today = new Date().toDateString();

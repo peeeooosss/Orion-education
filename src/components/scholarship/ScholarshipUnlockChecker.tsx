@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatINR, useAppStore } from "@/store/useAppStore";
-import { computeScholarship, type Stream, type ScoreBand } from "@/lib/scholarship";
+import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
 import { StudentQuestionnaire } from "./StudentQuestionnaire";
 import type { StudentQuestionnaire as Questionnaire } from "@/store/types";
 
@@ -15,7 +15,6 @@ export function ScholarshipUnlockChecker() {
   const authUser = useAppStore((s) => s.authUser);
   const questionnaire = useAppStore((s) => s.questionnaire);
   const payments = useAppStore((s) => s.payments);
-  const colleges = useAppStore((s) => s.colleges);
   const setQuestionnaire = useAppStore((s) => s.setQuestionnaire);
   const createPayment = useAppStore((s) => s.createPayment);
   const completePayment = useAppStore((s) => s.completePayment);
@@ -38,22 +37,17 @@ export function ScholarshipUnlockChecker() {
     return "questionnaire";
   }, [authUser, scholarshipPaid, questionnaire, view]);
 
-  const stream = (questionnaire?.stream ?? "Engineering") as Stream;
-  const scoreBand = (questionnaire?.scoreBand ?? "75-90") as ScoreBand;
-
   const collegeAmounts = React.useMemo(() => {
-    return colleges
-      .filter((c) => c.programs.some((p) => p.stream === stream || p.name.toLowerCase().includes(stream.toLowerCase())))
-      .concat(colleges.filter((c) => !c.programs.some((p) => p.stream === stream || p.name.toLowerCase().includes(stream.toLowerCase()))))
+    return MBA_PGDM_COLLEGES
+      .filter((c) => c.isPartnered && c.scholarshipAvailable)
       .map((c) => ({
         id: c.id,
         name: c.name,
-        shortName: c.shortName,
-        city: c.city,
-        rating: c.rating,
-        amount: computeScholarship({ stream, scoreBand, collegeRating: c.rating }),
+        shortName: c.name,
+        city: c.location,
+        amount: c.maxScholarship,
       }));
-  }, [colleges, stream, scoreBand]);
+  }, []);
 
   const maxAmount = React.useMemo(() => Math.max(...collegeAmounts.map((c) => c.amount)), [collegeAmounts]);
 
@@ -79,7 +73,7 @@ export function ScholarshipUnlockChecker() {
       studentName: authUser.name,
       email: authUser.email,
       phone: authUser.phone,
-      collegeIds: colleges.map((c) => c.id),
+      collegeIds: MBA_PGDM_COLLEGES.filter((c) => c.isPartnered && c.scholarshipAvailable).map((c) => c.id),
       primaryCollegeId: effectivePrimaryId,
     });
     setView("checkout");
@@ -109,7 +103,7 @@ export function ScholarshipUnlockChecker() {
         <div>
           <Badge variant="gold" className="bg-gold-100 text-gold-700">Scholarship match ready</Badge>
           <h3 className="mt-3 font-display text-2xl font-bold text-surface-900">Pick your #1 college</h3>
-          <p className="mt-2 text-sm text-surface-600">Your scholarship is valid at <b>all partner colleges</b>. Choose your top choice below — this helps our counsellors prioritize the right application for you.</p>
+           <p className="mt-2 text-sm text-surface-600">Your scholarship is valid for MBA and PGDM programs at <b>all Orion partner colleges</b>. Choose your top choice below — this helps our counsellors prioritize the right application for you.</p>
         </div>
 
         <div className="space-y-2 rounded-2xl bg-gold-50/50 p-4">
@@ -141,7 +135,7 @@ export function ScholarshipUnlockChecker() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-surface-900 truncate">{college.name}</p>
-                    <p className="text-xs text-surface-500">{college.city} · Rating {college.rating}/5</p>
+                    <p className="text-xs text-surface-500">{college.city} · MBA / PGDM programs</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-display text-lg font-bold text-gold-700">{formatINR(college.amount)}</p>
@@ -153,7 +147,7 @@ export function ScholarshipUnlockChecker() {
         </div>
 
         <p className="text-sm font-medium text-surface-700 text-center">
-          Unlock your assured scholarship for just <b>₹99</b> — valid at every partner college.
+           Unlock your assured MBA/PGDM scholarship for just <b>₹99</b> — valid at every Orion partner college.
         </p>
 
         <Button variant="gold" className="h-12 w-full text-base" onClick={handleInitiatePayment} disabled={!effectivePrimaryId}>
@@ -193,7 +187,7 @@ export function ScholarshipUnlockChecker() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gradient"><IndianRupee className="h-8 w-8 text-gold-500" /></div>
         <div>
           <h3 className="font-display text-2xl font-bold text-surface-900">Confirm scholarship unlock</h3>
-          <p className="mt-2 text-sm text-surface-600">Pay ₹99 to unlock your assured scholarship at all partner colleges.</p>
+         <p className="mt-2 text-sm text-surface-600">Pay ₹99 to unlock your assured MBA/PGDM scholarship at all Orion partner colleges.</p>
         </div>
         {selectedPrimary && (
           <div className="rounded-2xl bg-gold-50/60 border border-gold-200 p-4 text-sm">
@@ -202,7 +196,7 @@ export function ScholarshipUnlockChecker() {
           </div>
         )}
         <div className="space-y-2 rounded-2xl bg-surface-50 p-4 text-sm text-surface-700">
-          <div className="flex justify-between"><span>Scholarship check (all colleges)</span><span className="font-semibold">₹99</span></div>
+          <div className="flex justify-between"><span>MBA/PGDM scholarship check</span><span className="font-semibold">₹99</span></div>
           <div className="flex justify-between"><span>Free consultation</span><span className="text-green-600">Included</span></div>
           <div className="flex justify-between"><span>Agent support</span><span className="text-green-600">Included</span></div>
           <div className="flex justify-between border-t border-surface-200 pt-2 font-bold"><span>Total</span><span>₹99</span></div>
@@ -221,7 +215,7 @@ export function ScholarshipUnlockChecker() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100"><Check className="h-8 w-8 text-green-600" /></div>
         <div>
           <h3 className="font-display text-2xl font-bold text-surface-900">Payment successful!</h3>
-          <p className="mt-2 text-sm text-surface-600">Your assured scholarship is <b>unlocked at all partner colleges</b>.</p>
+         <p className="mt-2 text-sm text-surface-600">Your assured MBA/PGDM scholarship is <b>unlocked at all Orion partner colleges</b>.</p>
         </div>
 
         <div className="rounded-2xl bg-brand-950 p-5 text-white text-left">

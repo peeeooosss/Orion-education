@@ -38,13 +38,15 @@ export function isConverted(status: LeadStatus): boolean {
 }
 
 const BASE_SCHOLARSHIP: Record<Stream, number> = {
-  Engineering: 25000,
+  Engineering: 0,
   MBA: 40000,
-  Commerce: 15000,
-  Design: 18000,
-  Law: 20000,
-  Medical: 30000,
+  Commerce: 0,
+  Design: 0,
+  Law: 0,
+  Medical: 0,
 };
+
+export const ORION_MAX_SCHOLARSHIP = 30000;
 
 const SCORE_MULTIPLIER: Record<ScoreBand, number> = {
   "90+": 1.5,
@@ -58,11 +60,12 @@ export function computeScholarship(input: {
   scoreBand: ScoreBand;
   collegeRating: number;
 }): number {
+  if (input.stream !== "MBA") return 0;
   const base = BASE_SCHOLARSHIP[input.stream] ?? 15000;
   const scoreFactor = SCORE_MULTIPLIER[input.scoreBand] ?? 1;
   const prestigeFactor = input.collegeRating >= 4.5 ? 1.2 : 1;
   const raw = base * scoreFactor * prestigeFactor;
-  return Math.round(raw / 500) * 500;
+  return Math.min(ORION_MAX_SCHOLARSHIP, Math.round(raw / 500) * 500);
 }
 
 export function estimateFromProfile(
@@ -152,12 +155,14 @@ export function generateOpeningScript(lead: {
   agentName?: string;
   scholarshipApplied?: boolean;
 }): string {
+  const managementProgram = /\bMBA\b|\bPGDM\b/i.test(lead.lookingFor);
   const opener = (lead.scholarshipApplied ? SCRIPT_OPENERS : ENQUIRY_OPENERS)[Math.floor(Math.random() * (lead.scholarshipApplied ? SCRIPT_OPENERS : ENQUIRY_OPENERS).length)];
   const closer = SCRIPT_CLOSERS[Math.floor(Math.random() * SCRIPT_CLOSERS.length)];
   if (lead.scholarshipApplied) {
     return `"Hi ${lead.name}, this is ${lead.agentName ?? "Rohit"} from Orion Education. ${opener} You've unlocked ₹${lead.scholarshipUnlocked.toLocaleString("en-IN")} towards ${lead.targetCollege}. I saw you're interested in ${lead.lookingFor.toLowerCase()}. ${closer}"`;
   }
-  return `"Hi ${lead.name}, this is ${lead.agentName ?? "Rohit"} from Orion Education. ${opener} I saw you're interested in ${lead.lookingFor.toLowerCase()} at ${lead.targetCollege}. I can also check if you're eligible for an assured scholarship of up to ₹60,000 — shall I? ${closer}"`;
+  const scholarshipLine = managementProgram ? " I can also check if you're eligible for an assured MBA or PGDM scholarship of up to ₹30,000 — shall I?" : "";
+  return `"Hi ${lead.name}, this is ${lead.agentName ?? "Rohit"} from Orion Education. ${opener} I saw you're interested in ${lead.lookingFor.toLowerCase()} at ${lead.targetCollege}.${scholarshipLine} ${closer}"`;
 }
 
 export const STREAM_OPTIONS: { value: Stream; label: string; emoji: string }[] = [

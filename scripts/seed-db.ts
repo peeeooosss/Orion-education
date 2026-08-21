@@ -128,6 +128,8 @@ async function main() {
         facilities: college.facilities,
         sourceWebsite: college.sourceWebsite,
         coverImage: college.coverImage,
+        partnerCollege: college.partnerCollege ?? false,
+        budget: String(college.scholarships.budget ?? 0),
       });
 
       for (const prog of college.programs) {

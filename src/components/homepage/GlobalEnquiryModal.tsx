@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Sparkles, ExternalLink, Phone, User, AlertCircle, CheckCircle } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Phone, User, AlertCircle, CheckCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { STREAM_OPTIONS, type Stream, type ScoreBand } from "@/lib/scholarship";
+import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
 
 interface CollegeOption {
   id: string;
@@ -29,12 +30,15 @@ interface CollegeOption {
   programs: { name: string; stream: string | null }[];
 }
 
-const TIMELINES = ["This admission cycle", "Within 1 month", "Within 3 months", "Just exploring"];
+const COLLEGE_OPTIONS: CollegeOption[] = MBA_PGDM_COLLEGES.map((college) => ({
+  id: college.id,
+  name: college.name,
+  city: college.location,
+  programs: college.courses.map((course) => ({ name: course.name, stream: "MBA" })),
+}));
 
 export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [step, setStep] = useState<"form" | "success">("form");
-  const [colleges, setColleges] = useState<CollegeOption[]>([]);
-  const [loadingColleges, setLoadingColleges] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedCollege, setSelectedCollege] = useState<CollegeOption | null>(null);
@@ -45,41 +49,19 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
   const [phone, setPhone] = useState("");
   const [stream, setStream] = useState<Stream>("Engineering");
 
-  useEffect(() => {
-    if (open) {
-      setStep("form");
-      setError("");
-      setName("");
-      setPhone("");
-      setSelectedCollege(null);
-      setSelectedProgram("");
-      setScoreBand("75-90");
-      setStream("Engineering");
-      loadColleges();
-    }
-  }, [open]);
-
-  async function loadColleges() {
-    try {
-      const res = await fetch("/api/colleges");
-      if (!res.ok) return;
-      const data = await res.json();
-      const mapped: CollegeOption[] = (data.colleges || []).map((c: Record<string, unknown>) => ({
-        id: c.id as string,
-        name: c.name as string,
-        city: c.city as string,
-        programs: (c.programs as Array<{ name: string; stream: string | null }> | undefined) || [],
-      }));
-      setColleges(mapped);
-    } catch {
-      // silent
-    } finally {
-      setLoadingColleges(false);
-    }
+  function resetForm() {
+    setStep("form");
+    setError("");
+    setName("");
+    setPhone("");
+    setSelectedCollege(null);
+    setSelectedProgram("");
+    setScoreBand("75-90");
+    setStream("MBA");
   }
 
   function handleCollegeChange(collegeId: string) {
-    const c = colleges.find((col) => col.id === collegeId) || null;
+    const c = COLLEGE_OPTIONS.find((col) => col.id === collegeId) || null;
     setSelectedCollege(c);
     setSelectedProgram(c?.programs[0]?.name ?? "");
     if (c) {
@@ -126,7 +108,7 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
   const programOptions = selectedCollege?.programs || [];
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!loading) onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!loading) { if (o) resetForm(); onOpenChange(o); } }}>
       <DialogContent className="max-w-md border border-surface-200 bg-surface-0">
         {step === "success" ? (
           <div className="py-6 text-center">
@@ -186,13 +168,12 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
                 <Select
                   value={selectedCollege?.id ?? ""}
                   onValueChange={handleCollegeChange}
-                  disabled={loadingColleges}
-                >
-                  <SelectTrigger className="h-11 w-full rounded-2xl border-surface-200">
-                    <SelectValue placeholder={loadingColleges ? "Loading colleges..." : "Select a college"} />
+                 >
+                    <SelectTrigger className="h-11 w-full rounded-2xl border-surface-200">
+                     <SelectValue placeholder="Select a college" />
                   </SelectTrigger>
                   <SelectContent>
-                    {colleges.map((c) => (
+                     {COLLEGE_OPTIONS.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         <div className="flex flex-col">
                           <span>{c.name}</span>
@@ -221,9 +202,9 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
               )}
 
               <div className="space-y-2">
-                <Label className="text-surface-800">Stream</Label>
+                <Label className="text-surface-800">Program type</Label>
                 <div className="flex flex-wrap gap-2">
-                  {STREAM_OPTIONS.map((opt) => (
+                  {STREAM_OPTIONS.filter((opt) => opt.value === "MBA").map((opt) => (
                     <button
                       key={opt.value}
                       type="button"

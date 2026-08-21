@@ -37,6 +37,7 @@ import type {
   Voucher,
   WebsiteVisitLead,
 } from "./types";
+import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
 
 function leadTypeFromSource(source: Lead["source"]): LeadType {
   if (source === "Scholarship Checker") return "scholarship";
@@ -307,10 +308,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!payment) return null;
     const colleges = state.colleges.filter((c) => payment.collegeIds.includes(c.id));
     const primaryCollege = colleges.find((c) => c.id === payment.primaryCollegeId) ?? colleges[0];
+    const directoryCollege = MBA_PGDM_COLLEGES.find((c) => c.id === payment.primaryCollegeId);
     const agent = state.agents[Math.floor(Math.random() * state.agents.length)].name;
     const scoreBand = questionnaire.scoreBand ?? "75-90";
     const stream = questionnaire.stream ?? "MBA";
-    const scholarship = computeScholarship({ stream: stream as import("@/lib/scholarship").Stream, scoreBand: scoreBand as import("@/lib/scholarship").ScoreBand, collegeRating: primaryCollege?.rating ?? 4 });
+    const scholarship = directoryCollege?.maxScholarship ?? computeScholarship({ stream: stream as import("@/lib/scholarship").Stream, scoreBand: scoreBand as import("@/lib/scholarship").ScoreBand, collegeRating: primaryCollege?.rating ?? 4 });
     const intent = computeIntentScore({ scoreBand: scoreBand as import("@/lib/scholarship").ScoreBand, scholarship });
     const lead: Lead = {
       id: uid("l"),
@@ -321,7 +323,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       scoreBand: scoreBand as import("@/lib/scholarship").ScoreBand,
       scholarshipUnlocked: scholarship,
       lookingFor: questionnaire.preferredProgram ?? "Scholarship & Admission",
-      targetCollege: primaryCollege?.name ?? "College to be confirmed",
+      targetCollege: directoryCollege?.name ?? primaryCollege?.name ?? "College to be confirmed",
       status: "New",
       callConnected: false,
       source: "Scholarship Checker",
@@ -467,12 +469,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addLead: (input) => {
     const college = get().colleges.find((c) => c.id === input.targetCollege);
-    const rating = college?.rating ?? 4;
-    const scholarship = computeScholarship({
-      stream: input.stream,
-      scoreBand: input.scoreBand,
-      collegeRating: rating,
-    });
+    const directoryCollege = MBA_PGDM_COLLEGES.find((c) => c.id === input.targetCollege);
+    const scholarship = directoryCollege
+      ? directoryCollege.isPartnered && input.stream === "MBA" ? directoryCollege.maxScholarship : 0
+      : college?.partnerCollege && input.stream === "MBA"
+        ? computeScholarship({ stream: input.stream, scoreBand: input.scoreBand, collegeRating: college.rating })
+        : 0;
     const intent = computeIntentScore({ scoreBand: input.scoreBand, scholarship });
     const agentPool = get().agents;
     const agent = agentPool[Math.floor(Math.random() * agentPool.length)].name;
@@ -488,7 +490,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       scoreBand: input.scoreBand,
       scholarshipUnlocked: scholarship,
       lookingFor: input.lookingFor,
-      targetCollege: college?.name ?? input.targetCollege,
+       targetCollege: directoryCollege?.name ?? college?.name ?? input.targetCollege,
       status: "New",
       callConnected: false,
       source: input.source,
@@ -501,7 +503,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       intentReasons: intent.reasons,
       questionnaire: questionnaire?.completedAt ? questionnaire : undefined,
       leadType: leadTypeFromSource(input.source),
-      scholarshipApplied: input.source === "Scholarship Checker",
+       scholarshipApplied: input.source === "Scholarship Checker" && scholarship > 0,
     };
 
     set((state) => ({

@@ -12,17 +12,23 @@ import { CampusReels } from "@/components/college/CampusReels";
 import { SmartEnquiryModal } from "@/components/college/SmartEnquiryModal";
 import { EnquirySidebar } from "@/components/college/EnquirySidebar";
 import { VisitWebsiteModal } from "@/components/college/VisitWebsiteModal";
+import { DirectoryCollegeDetail } from "@/components/college/DirectoryCollegeDetail";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppStore, formatINR } from "@/store/useAppStore";
 import { estimateFromProfile } from "@/lib/scholarship";
+import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
+import { isMBAOrPGDMProgram } from "@/data/college-directory";
 
 export default function CollegeDetailPage() {
   const params = useParams<{ id: string }>();
+  const directoryCollege = MBA_PGDM_COLLEGES.find((c) => c.id === params.id);
   const college = useAppStore((s) => s.colleges.find((c) => c.id === params.id));
   const profile = useAppStore((s) => s.studentProfile);
   const [enquiryOpen, setEnquiryOpen] = React.useState(false);
   const [visitOpen, setVisitOpen] = React.useState(false);
+
+  if (directoryCollege) return <DirectoryCollegeDetail college={directoryCollege} />;
 
   if (!college) {
     return (
@@ -44,6 +50,7 @@ export default function CollegeDetailPage() {
 
   const lowestFee = Math.min(...college.programs.map((p) => p.annualFee));
   const estimate = estimateFromProfile(profile, college.rating);
+  const supportsOrionScholarship = Boolean(college.partnerCollege && college.programs.some((program) => isMBAOrPGDMProgram(program.name)));
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-50">
@@ -112,7 +119,7 @@ export default function CollegeDetailPage() {
         </div>
 
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-gold-200 bg-gold-50 p-5 sm:flex-row sm:items-center">
+          {supportsOrionScholarship && <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-gold-200 bg-gold-50 p-5 sm:flex-row sm:items-center">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-500 text-brand-950">
                 <BadgePercent className="h-5 w-5" strokeWidth={1.75} />
@@ -129,7 +136,7 @@ export default function CollegeDetailPage() {
             <Link href={`/scholarship?college=${college.id}`}>
               <Button variant="brandGradient" className="!px-6 !py-3 text-sm">Check my eligibility</Button>
             </Link>
-          </div>
+          </div>}
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
@@ -153,7 +160,7 @@ export default function CollegeDetailPage() {
             <div className="sticky top-24 space-y-6 self-start">
               <EnquirySidebar college={college} />
 
-              <div className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
+              {supportsOrionScholarship && <div className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
                 <div className="flex items-center gap-2">
                   <BadgePercent className="h-5 w-5 text-gold-700" strokeWidth={1.75} />
                   <p className="font-display text-lg font-bold text-surface-900">Scholarships & financial aid</p>
@@ -171,7 +178,7 @@ export default function CollegeDetailPage() {
                     Check full eligibility →
                   </Button>
                 </Link>
-              </div>
+              </div>}
 
               <div className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
                 <p className="text-sm font-semibold text-surface-900">Why students choose {college.shortName}</p>
@@ -200,7 +207,7 @@ export default function CollegeDetailPage() {
           <div>
             <p className="text-sm font-semibold text-surface-900">{college.name}</p>
             <p className="text-xs text-surface-500">
-              Scholarship up to ₹60,000 · {college.placementPct}% placement
+              {supportsOrionScholarship ? "MBA/PGDM scholarship available · " : ""}{college.placementPct}% placement
             </p>
           </div>
           <div className="flex items-center gap-3">
