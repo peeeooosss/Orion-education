@@ -20,12 +20,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { College } from "@/store/types";
 
 const TIMELINES = ["This admission cycle", "Within 1 month", "Within 3 months", "Just exploring"];
 
+export interface VisitWebsiteCollege {
+  id: string;
+  name: string;
+  shortName: string;
+  programs: { name: string }[];
+  sourceWebsite?: string;
+}
+
 interface VisitWebsiteModalProps {
-  college: College;
+  college: VisitWebsiteCollege;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

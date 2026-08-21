@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { SmartEnquiryModal, type EnquiryCollege } from "@/components/college/SmartEnquiryModal";
+import { VisitWebsiteModal, type VisitWebsiteCollege } from "@/components/college/VisitWebsiteModal";
 import { CollegeLogo } from "@/components/college/CollegeLogo";
 import { canReceiveOrionScholarship, type CollegeDirectoryEntry } from "@/data/college-directory";
 import { getPartnerProfile } from "@/data/partner-profiles";
@@ -21,9 +22,20 @@ function toEnquiryCollege(college: CollegeDirectoryEntry): EnquiryCollege {
 
 export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryEntry }) {
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [visitUrl, setVisitUrl] = useState<string | null>(null);
   const scholarshipProgram = college.courses.find((course) => canReceiveOrionScholarship(college, course.name));
   const profile = getPartnerProfile(college.id);
   const isPartner = college.isPartnered;
+
+  const visitCollege: VisitWebsiteCollege | null = profile
+    ? {
+        id: college.id,
+        name: college.name,
+        shortName: college.name,
+        programs: college.courses.map((course) => ({ name: course.name })),
+        sourceWebsite: visitUrl ?? profile.website,
+      }
+    : null;
 
   const quickFacts = profile
     ? [
@@ -93,10 +105,11 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
               </div>
 
               {profile && (
-                <a href={profile.website} target="_blank" rel="noopener noreferrer"
+                <button
+                  onClick={() => setVisitUrl(profile.website)}
                   className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:border-gold-300 hover:text-gold-200">
                   <ExternalLink className="h-4 w-4" /> Official website
-                </a>
+                </button>
               )}
             </div>
           </div>
@@ -202,11 +215,11 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
                   <h2 className="font-display text-lg font-bold text-surface-900">Official links</h2>
                   <div className="mt-4 space-y-2">
                     {(profile.links ?? [{ label: "Official website", url: profile.website }]).map((link) => (
-                      <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center justify-between rounded-xl border border-surface-200 px-4 py-2.5 text-sm font-semibold text-surface-800 transition-colors hover:border-gold-300 hover:text-gold-700">
+                      <button key={link.url} onClick={() => setVisitUrl(link.url)}
+                        className="flex w-full items-center justify-between rounded-xl border border-surface-200 px-4 py-2.5 text-sm font-semibold text-surface-800 transition-colors hover:border-gold-300 hover:text-gold-700">
                         {link.label}
                         <ExternalLink className="h-4 w-4 text-surface-400" />
-                      </a>
+                      </button>
                     ))}
                   </div>
                 </section>
@@ -233,6 +246,14 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
       <Footer />
 
       {enquiryOpen && <SmartEnquiryModal college={toEnquiryCollege(college)} open onOpenChange={setEnquiryOpen} />}
+
+      {visitCollege && (
+        <VisitWebsiteModal
+          college={visitCollege}
+          open={visitUrl !== null}
+          onOpenChange={(open) => { if (!open) setVisitUrl(null); }}
+        />
+      )}
     </div>
   );
 }
