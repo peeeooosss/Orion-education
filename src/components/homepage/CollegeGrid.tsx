@@ -156,29 +156,14 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
                   isPartner ? "border-blue-300 ring-1 ring-blue-100" : "border-surface-200"
                 }`}
               >
-                <Link href={`/college/${college.id}`} className={`relative flex min-h-44 w-full items-start justify-between p-5 ${isPartner ? "bg-white" : "bg-brand-gradient"}`}>
-                  {!isPartner && <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/15 blur-2xl" />}
-                  {isPartner && cardProfile?.heroImage && (
-                    <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={cardProfile.heroImage.url}
-                        alt={cardProfile.heroImage.alt}
-                        onError={(event) => { event.currentTarget.style.display = "none"; }}
-                        className="absolute inset-0 h-full w-full object-cover opacity-40"
-                      />
-                      <div className="absolute inset-0 shadow-[inset_0_0_0_8px_#ffffff]" />
-                      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-white via-white/70 to-transparent" />
-                    </>
-                  )}
+                <Link href={`/college/${college.id}`} className={`relative flex min-h-44 w-full items-start justify-between p-5 ${isPartner ? "bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700" : "bg-brand-gradient"}`}>
+                  <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
                   {cardLogo && (
                     <div className="absolute right-4 top-4">
                       {cardLogo.onDark ? (
-                        <div className="rounded-lg bg-slate-900 p-1.5 shadow-sm">
-                          <CollegeLogo logo={cardLogo} className="h-9 w-9 object-contain" />
-                        </div>
+                        <CollegeLogo logo={cardLogo} className="h-11 w-11 rounded-lg object-contain drop-shadow" />
                       ) : (
-                        <div className="rounded-lg border border-surface-200 bg-white p-1.5 shadow-sm">
+                        <div className="rounded-lg bg-white p-1.5 shadow-sm">
                           <CollegeLogo logo={cardLogo} className="h-9 w-9 object-contain" />
                         </div>
                       )}
@@ -186,11 +171,11 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
                   )}
                   <div className="relative">
                     <div className="flex flex-wrap gap-2">
-                      {isPartner && <span className="inline-flex items-center gap-1 rounded-full bg-blue-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white"><BadgeCheck className="h-3 w-3" /> Orion Partner</span>}
-                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${isPartner ? "border border-surface-300 bg-white/80 text-surface-700" : "bg-white/15 text-white"}`}>{college.region}</span>
+                      {isPartner && <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700"><BadgeCheck className="h-3 w-3" /> Orion Partner</span>}
+                      <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold text-white">{college.region}</span>
                     </div>
-                    <p className={`mt-8 font-display text-xl font-bold ${isPartner ? "text-white text-stroke-dark drop-shadow-[0_2px_10px_rgba(15,23,42,0.25)]" : "text-white"} ${cardLogo ? "max-w-[15rem]" : "max-w-[18rem]"}`}>{college.name}</p>
-                    <p className={`mt-1 flex items-start gap-1 text-xs ${isPartner ? "text-surface-600" : "text-white/75"}`}><MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {college.location}</p>
+                    <p className={`mt-8 font-display text-xl font-bold text-white ${cardLogo ? "max-w-[15rem]" : "max-w-[18rem]"}`}>{college.name}</p>
+                    <p className="mt-1 flex items-start gap-1 text-xs text-white/75"><MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {college.location}</p>
                   </div>
                 </Link>
 
