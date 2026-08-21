@@ -6,6 +6,8 @@ import { ArrowRight, BadgeCheck, BadgePercent, Bookmark, Building2, MapPin, Phon
 import { Badge } from "@/components/ui/badge";
 import { SmartEnquiryModal, type EnquiryCollege } from "@/components/college/SmartEnquiryModal";
 import { MBA_PGDM_COLLEGES, canReceiveOrionScholarship, COLLEGE_REGIONS, type CollegeDirectoryEntry } from "@/data/college-directory";
+import { getPartnerProfile } from "@/data/partner-profiles";
+import { CollegeLogo } from "@/components/college/CollegeLogo";
 import type { Stream } from "@/lib/scholarship";
 
 export type SortKey = "default" | "fee-asc" | "fee-desc" | "rating" | "placement";
@@ -145,6 +147,8 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
           {sorted.map((college) => {
             const scholarshipCourse = college.courses.find((course) => canReceiveOrionScholarship(college, course.name));
             const isPartner = college.isPartnered;
+            const cardProfile = isPartner ? getPartnerProfile(college.id) : undefined;
+            const cardLogo = cardProfile?.logos[0];
             return (
               <div
                 key={college.id}
@@ -154,12 +158,23 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
               >
                 <Link href={`/college/${college.id}`} className={`relative flex min-h-44 w-full items-start justify-between p-5 ${isPartner ? "bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700" : "bg-brand-gradient"}`}>
                   <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
+                  {cardLogo && (
+                    <div className="absolute right-4 top-4">
+                      {cardLogo.onDark ? (
+                        <CollegeLogo logo={cardLogo} className="h-11 w-11 rounded-lg object-contain drop-shadow" />
+                      ) : (
+                        <div className="rounded-lg bg-white p-1.5 shadow-sm">
+                          <CollegeLogo logo={cardLogo} className="h-9 w-9 object-contain" />
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="relative">
                     <div className="flex flex-wrap gap-2">
                       {isPartner && <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700"><BadgeCheck className="h-3 w-3" /> Orion Partner</span>}
                       <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold text-white">{college.region}</span>
                     </div>
-                    <p className="mt-8 max-w-[18rem] font-display text-xl font-bold text-white">{college.name}</p>
+                    <p className={`mt-8 font-display text-xl font-bold text-white ${cardLogo ? "max-w-[15rem]" : "max-w-[18rem]"}`}>{college.name}</p>
                     <p className="mt-1 flex items-start gap-1 text-xs text-white/75"><MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {college.location}</p>
                   </div>
                 </Link>
