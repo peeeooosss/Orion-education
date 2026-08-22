@@ -68,6 +68,7 @@ export const leads = pgTable("leads", {
   lookingFor: text("looking_for"),
   targetCollege: text("target_college"),
   targetProgram: text("target_program"),
+  admissionTimeline: text("admission_timeline"),
 
   // Scholarship
   scholarshipAmount: numeric("scholarship_amount").default("0"),

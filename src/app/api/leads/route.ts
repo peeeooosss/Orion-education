@@ -276,6 +276,7 @@ export async function POST(req: NextRequest) {
       lookingFor: lookingFor || `${targetProgram || collegeData} · ${admissionTimeline || "This admission cycle"}`,
       targetCollege: collegeData,
       targetProgram: targetProgram || null,
+      admissionTimeline: admissionTimeline || null,
       scholarshipAmount: String(scholarship),
       scholarshipApplied: leadType === "scholarship",
       paymentStatus: "Not Required",

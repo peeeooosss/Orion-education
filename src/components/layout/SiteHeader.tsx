@@ -6,6 +6,8 @@ import { Menu, X, ChevronDown, GraduationCap, LogOut, User, Headset, ShieldCheck
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
+import { useEnquiryStore } from "@/store/useEnquiryStore";
+import { GlobalEnquiryModal } from "@/components/homepage/GlobalEnquiryModal";
 import { useRouter } from "next/navigation";
 
 const navLinks = [
@@ -72,6 +74,9 @@ export function SiteHeader() {
   const menuRef = useRef<HTMLDivElement>(null);
   const authUser = useAppStore((s) => s.authUser);
   const signOut = useAppStore((s) => s.signOut);
+  const enquiryOpen = useEnquiryStore((s) => s.open);
+  const openEnquiry = useEnquiryStore((s) => s.openModal);
+  const closeEnquiry = useEnquiryStore((s) => s.closeModal);
   const router = useRouter();
 
   useEffect(() => {
@@ -97,6 +102,9 @@ export function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button variant="gold" size="sm" className="hidden uppercase tracking-wide sm:inline-flex" onClick={openEnquiry}>
+            Enquiry Now
+          </Button>
           {!authUser ? (
             <Link href="/auth/sign-in">
               <Button variant="gold" size="sm">
@@ -147,6 +155,12 @@ export function SiteHeader() {
 
       <div className={cn("lg:hidden border-t border-surface-200 bg-white", open ? "block" : "hidden")}>
         <div className="space-y-1 px-4 py-3">
+          <button
+            onClick={() => { setOpen(false); openEnquiry(); }}
+            className="block w-full rounded-lg bg-brand-gradient px-3 py-2 text-left text-sm font-bold uppercase tracking-wide text-white"
+          >
+            Enquiry Now
+          </button>
           {navLinks.map((link) => (
             <a key={link.label} href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">
               {link.label}
@@ -165,6 +179,8 @@ export function SiteHeader() {
           )}
         </div>
       </div>
+
+      <GlobalEnquiryModal open={enquiryOpen} onOpenChange={(o) => { if (!o) closeEnquiry(); }} />
     </header>
   );
 }

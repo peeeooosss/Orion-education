@@ -25,6 +25,7 @@ interface CollegeGridProps {
 const selectClass =
   "h-10 rounded-2xl border border-surface-200 bg-white px-3 text-sm font-medium text-surface-900 focus:border-gold-500 outline-none focus:ring-2 focus:ring-gold-200";
 const SAVED_COLLEGES_KEY = "orion-saved-colleges";
+const INITIAL_VISIBLE = 16;
 
 function feeValue(fees: string): number {
   const values = fees.match(/[\d,]+/g)?.map((value) => Number(value.replace(/,/g, ""))) ?? [];
@@ -42,6 +43,7 @@ function toEnquiryCollege(college: CollegeDirectoryEntry): EnquiryCollege {
 export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSort }: CollegeGridProps) {
   const [enquiryCollege, setEnquiryCollege] = useState<EnquiryCollege | null>(null);
   const [savedIds, setSavedIds] = useState<string[]>([]);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SAVED_COLLEGES_KEY);
@@ -77,6 +79,8 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
   });
 
   const hasFilters = Boolean(search.trim() || stream || city || sort !== "default");
+  const visible = showAll ? sorted : sorted.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = sorted.length - visible.length;
 
   function resetFilters() {
     onStream(null);
@@ -143,8 +147,8 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
           {hasFilters && <button onClick={resetFilters} className="mt-3 text-sm font-semibold text-gold-700 hover:underline">Clear all filters →</button>}
         </div>
       ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sorted.map((college) => {
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {visible.map((college) => {
             const scholarshipCourse = college.courses.find((course) => canReceiveOrionScholarship(college, course.name));
             const isPartner = college.isPartnered;
             const cardProfile = isPartner ? getPartnerProfile(college.id) : undefined;
@@ -218,6 +222,19 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
               </div>
             );
           })}
+        </div>
+      )}
+
+      {sorted.length > INITIAL_VISIBLE && (
+        <div className="mt-10 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            className="inline-flex items-center gap-2 rounded-full bg-brand-gradient px-8 py-3 text-sm font-bold text-white shadow-lg shadow-brand-950/20 transition-transform hover:scale-105"
+          >
+            {showAll ? "Show Less" : `View More (${hiddenCount} more)`}
+            {!showAll && <ArrowRight className="h-4 w-4" />}
+          </button>
         </div>
       )}
 

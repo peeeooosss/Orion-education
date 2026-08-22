@@ -30,6 +30,8 @@ interface CollegeOption {
   programs: { name: string; stream: string | null }[];
 }
 
+const ADMISSION_TIMELINES = ["This admission cycle", "Within 1 month", "Within 3 months", "Just exploring"];
+
 const COLLEGE_OPTIONS: CollegeOption[] = MBA_PGDM_COLLEGES.map((college) => ({
   id: college.id,
   name: college.name,
@@ -44,6 +46,7 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
   const [selectedCollege, setSelectedCollege] = useState<CollegeOption | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<string>("");
   const [scoreBand, setScoreBand] = useState<ScoreBand>("75-90");
+  const [timeline, setTimeline] = useState<string>(ADMISSION_TIMELINES[0]);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -58,6 +61,7 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
     setSelectedProgram("");
     setScoreBand("75-90");
     setStream("MBA");
+    setTimeline(ADMISSION_TIMELINES[0]);
   }
 
   function handleCollegeChange(collegeId: string) {
@@ -90,7 +94,7 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
           collegeId: selectedCollege.id,
           targetProgram: selectedProgram,
           lookingFor: `${selectedProgram} · ${stream}`,
-          admissionTimeline: "This admission cycle",
+          admissionTimeline: timeline,
         }),
       });
       if (!res.ok) {
@@ -217,6 +221,27 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
                       )}
                     >
                       {opt.emoji} {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-surface-800">When do you plan to take admission?</Label>
+                <div className="flex flex-wrap gap-2">
+                  {ADMISSION_TIMELINES.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTimeline(t)}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+                        timeline === t
+                          ? "border-brand-950 bg-brand-950 text-white"
+                          : "border-surface-200 text-surface-600 hover:border-gold-200"
+                      )}
+                    >
+                      {t}
                     </button>
                   ))}
                 </div>
