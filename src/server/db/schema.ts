@@ -243,6 +243,8 @@ export const colleges = pgTable("colleges", {
   coverImage: text("cover_image"),
   photos: jsonb("photos").default([]),
   videoLinks: jsonb("video_links").default([]),
+  campusVideos: jsonb("campus_videos").default([]),
+  partnerProfile: jsonb("partner_profile"),
   partnerCollege: boolean("partner_college").default(false),
   isPublished: boolean("is_published").default(true),
   budget: numeric("budget").default("80000"),

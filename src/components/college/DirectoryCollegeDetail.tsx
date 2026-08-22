@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BadgeCheck, BadgePercent, CalendarDays, ExternalLink, GraduationCap, Landmark, MapPin, PhoneCall, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, BadgePercent, CalendarDays, ExternalLink, GraduationCap, Landmark, PhoneCall, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { SmartEnquiryModal, type EnquiryCollege } from "@/components/college/SmartEnquiryModal";
 import { VisitWebsiteModal, type VisitWebsiteCollege } from "@/components/college/VisitWebsiteModal";
-import { CollegeLogo } from "@/components/college/CollegeLogo";
+import { CollegeCover } from "@/components/college/CollegeCover";
 import { canReceiveOrionScholarship, type CollegeDirectoryEntry } from "@/data/college-directory";
 import { getPartnerProfile } from "@/data/partner-profiles";
 
@@ -48,71 +48,22 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
     <div className="flex min-h-screen flex-col bg-surface-50">
       <SiteHeader />
       <main className="flex-1 pb-20">
-        {/* Hero */}
-        <div className={`relative overflow-hidden text-white ${isPartner ? "bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-800" : "bg-brand-gradient"}`}>
-          {profile?.heroImage && (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={profile.heroImage.url}
-                alt={profile.heroImage.alt}
-                onError={(event) => { event.currentTarget.style.display = "none"; }}
-                className="absolute inset-0 h-full w-full object-cover opacity-25"
-              />
-              <div className={`absolute inset-0 ${isPartner ? "bg-gradient-to-r from-blue-900/90 via-blue-800/70 to-transparent" : "bg-gradient-to-r from-brand-950/95 via-brand-950/60 to-transparent"}`} />
-            </>
-          )}
-          <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <Link href="/#colleges" className="inline-flex items-center gap-1.5 text-sm font-medium text-white/70 transition-colors hover:text-white">
-              <ArrowLeft className="h-4 w-4" /> All MBA &amp; PGDM colleges
-            </Link>
-            <div className="mt-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-              <div className="max-w-4xl">
-                <div className="flex flex-wrap items-center gap-2">
-                  {isPartner && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-bold text-blue-700">
-                      <BadgeCheck className="h-3.5 w-3.5" /> Orion Partner College
-                    </span>
-                  )}
-                  <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{college.region}</span>
-                  {profile?.accreditation && <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{profile.accreditation}</span>}
-                </div>
-                <div className="mt-4 flex items-center gap-4">
-                  {profile && profile.logos.length > 0 && (
-                    <div className="hidden shrink-0 items-center gap-2 sm:flex">
-                      {profile.logos.map((logo) =>
-                        logo.onDark ? (
-                          <CollegeLogo key={logo.url} logo={logo} className="h-14 w-14 rounded-xl object-contain drop-shadow-md sm:h-16 sm:w-16" />
-                        ) : (
-                          <div key={logo.url} className="rounded-xl bg-white p-2 shadow-md">
-                            <CollegeLogo logo={logo} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )}
-                  <h1 className="font-display text-3xl font-black tracking-tight sm:text-5xl">{college.name}</h1>
-                </div>
-                <p className="mt-3 flex items-start gap-2 text-sm text-white/75"><MapPin className="mt-0.5 h-4 w-4 shrink-0" /> {college.location}</p>
-                {profile?.tagline ? (
-                  <p className="mt-5 flex items-start gap-2 max-w-2xl font-display text-lg font-semibold leading-relaxed text-gold-200">
-                    <Sparkles className="mt-1 h-4 w-4 shrink-0" /> {profile.tagline}
-                  </p>
-                ) : (
-                  <p className="mt-5 max-w-2xl text-sm leading-relaxed text-white/75">Explore available MBA and PGDM programs, fee information, and Orion scholarship availability for this college.</p>
-                )}
-              </div>
-
-              {profile && (
-                <button
-                  onClick={() => setVisitUrl(profile.website)}
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:border-gold-300 hover:text-gold-200">
-                  <ExternalLink className="h-4 w-4" /> Official website
-                </button>
-              )}
-            </div>
-          </div>
+        {/* Cover */}
+        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+          <CollegeCover
+            name={college.name}
+            location={college.location}
+            region={college.region}
+            isPartner={isPartner}
+            heroPhoto={profile?.heroImage?.url}
+            logo={profile?.logos?.[0]}
+            tagline={profile?.tagline}
+            accreditation={profile?.accreditation}
+            sourceWebsite={profile?.website}
+            onVisitWebsite={() => profile && setVisitUrl(profile.website)}
+            onEnquire={() => setEnquiryOpen(true)}
+            backLabel="All MBA &amp; PGDM colleges"
+          />
         </div>
 
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -171,12 +122,14 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
               <section className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
                 <div className="flex items-center gap-2">
                   <GraduationCap className="h-5 w-5 text-gold-700" />
-                  <h2 className="font-display text-xl font-bold text-surface-900">MBA &amp; PGDM programs</h2>
+                  <h2 className="font-display text-xl font-bold text-surface-900">Programs</h2>
                 </div>
                 <div className="mt-5 space-y-3">
                   {college.courses.map((course) => (
                     <div key={course.name} className="flex flex-col justify-between gap-2 rounded-2xl border border-surface-200 bg-surface-50 p-4 sm:flex-row sm:items-center">
-                      <p className="text-sm font-semibold text-surface-900">{course.name}</p>
+                      <div>
+                        <p className="text-sm font-semibold text-surface-900">{course.name}</p>
+                      </div>
                       <p className="text-sm font-bold text-gold-700">{course.fees}</p>
                     </div>
                   ))}

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
-import { colleges, programs } from "@/server/db/schema";
+import { colleges, programs, websiteLeads } from "@/server/db/schema";
 import { getSessionFromCookie } from "@/server/auth";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 function uid(): string {
@@ -11,8 +11,19 @@ function uid(): string {
 
 export async function GET() {
   try {
-    const result = await db.select().from(colleges);
-    return NextResponse.json({ colleges: result });
+    const allColleges = await db.select().from(colleges);
+    const allPrograms = await db.select().from(programs);
+    const progMap = new Map<string, typeof allPrograms>();
+    for (const p of allPrograms) {
+      const arr = progMap.get(p.collegeId) || [];
+      arr.push(p);
+      progMap.set(p.collegeId, arr);
+    }
+    const enriched = allColleges.map((c) => ({
+      ...c,
+      programs: progMap.get(c.id) || [],
+    }));
+    return NextResponse.json({ colleges: enriched });
   } catch (error) {
     console.error("Get colleges error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -33,6 +44,7 @@ export async function POST(request: Request) {
       placementPct, highestPlacement, intake, facilities,
       sourceWebsite, coverImage, photos, videoLinks,
       partnerCollege, isPublished, budget, programsList,
+      campusVideos, partnerProfile,
     } = body;
 
     if (!name) {
@@ -64,6 +76,8 @@ export async function POST(request: Request) {
       coverImage: coverImage || null,
       photos: photos || [],
       videoLinks: videoLinks || [],
+      campusVideos: campusVideos || [],
+      partnerProfile: partnerProfile || null,
       partnerCollege: partnerCollege || false,
       isPublished: isPublished !== false,
       budget: budget ? String(budget) : "80000",
@@ -108,7 +122,6 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "College ID is required" }, { status: 400 });
     }
 
-    // Stringify numeric fields
     if (updates.rating !== undefined) updates.rating = String(updates.rating);
     if (updates.placementPct !== undefined) updates.placementPct = String(updates.placementPct);
     if (updates.highestPlacement !== undefined) updates.highestPlacement = String(updates.highestPlacement);
@@ -117,7 +130,6 @@ export async function PUT(request: Request) {
     await db.update(colleges).set(updates).where(eq(colleges.id, id));
 
     if (programsList && Array.isArray(programsList)) {
-      // Delete existing programs and re-insert
       await db.delete(programs).where(eq(programs.collegeId, id));
       for (const prog of programsList) {
         await db.insert(programs).values({
@@ -139,6 +151,30 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Update college error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await getSessionFromCookie();
+    if (!session || session.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "College ID is required" }, { status: 400 });
+    }
+
+    await db.delete(programs).where(eq(programs.collegeId, id));
+    await db.update(websiteLeads).set({ collegeId: null }).where(eq(websiteLeads.collegeId, id));
+    await db.delete(colleges).where(eq(colleges.id, id));
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete college error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

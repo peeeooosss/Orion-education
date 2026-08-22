@@ -228,6 +228,7 @@ export interface College {
   coverImage?: string;
   photos?: string[];
   videoLinks?: string[];
+  campusVideos?: { title: string; youtubeUrl: string; thumbnailUrl?: string; category?: string; duration?: string; order?: number }[];
   sourceWebsite?: string;
   partnerCollege?: boolean;
   isPublished?: boolean;
