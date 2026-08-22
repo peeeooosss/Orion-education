@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
-import { websiteLeads } from "@/server/db/schema";
+import { websiteLeads, colleges } from "@/server/db/schema";
 import { getSessionFromCookie } from "@/server/auth";
 import { nanoid } from "nanoid";
+import { eq, sql } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookie();
@@ -21,7 +22,11 @@ export async function GET(req: NextRequest) {
     .limit(limit)
     .offset(offset);
 
-  return NextResponse.json({ leads: rows, count: rows.length });
+  const [{ value: total }] = await db
+    .select({ value: sql<number>`count(*)::int` })
+    .from(websiteLeads);
+
+  return NextResponse.json({ leads: rows, count: rows.length, total });
 }
 
 export async function POST(req: NextRequest) {
@@ -46,12 +51,24 @@ export async function POST(req: NextRequest) {
     }
   } catch {}
 
+  // college_id carries an FK to the colleges table; Orion directory ids are not in
+  // that table, so only keep the id when it resolves — college_name preserves the rest.
+  let resolvedCollegeId: string | null = null;
+  if (collegeId) {
+    const match = await db
+      .select({ id: colleges.id })
+      .from(colleges)
+      .where(eq(colleges.id, collegeId))
+      .limit(1);
+    resolvedCollegeId = match[0]?.id ?? null;
+  }
+
   const record = await db.insert(websiteLeads).values({
     id: `wvl-${nanoid(12)}`,
     name: name.trim(),
     phone: phone.trim(),
     email: email?.trim() || null,
-    collegeId: collegeId || null,
+    collegeId: resolvedCollegeId,
     collegeName: collegeName || null,
     program: program || null,
     admissionTimeline: admissionTimeline || null,

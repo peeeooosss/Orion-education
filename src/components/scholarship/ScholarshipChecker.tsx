@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { SCORE_OPTIONS, STREAM_OPTIONS, type ScoreBand, type Stream } from "@/lib/scholarship";
 import { formatINR, useAppStore } from "@/store/useAppStore";
 import type { Lead } from "@/store/types";
+import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
 import { easeOutExpo, springPop } from "@/lib/motion";
 import confetti from "canvas-confetti";
 
@@ -56,7 +57,6 @@ function CheckMarkIcon() {
 
 export function ScholarshipChecker({ initialCollege }: { initialCollege?: string } = {}) {
   const colleges = useAppStore((s) => s.colleges);
-  const addLead = useAppStore((s) => s.addLead);
   const claimVoucher = useAppStore((s) => s.claimVoucher);
 
   const [step, setStep] = React.useState<Step>("info");
@@ -68,6 +68,8 @@ export function ScholarshipChecker({ initialCollege }: { initialCollege?: string
   const [collegeId, setCollegeId] = React.useState<string | null>(initialCollege ?? null);
   const [lead, setLead] = React.useState<Lead | null>(null);
   const [loadingIdx, setLoadingIdx] = React.useState(0);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [claimed, setClaimed] = React.useState(false);
   const [showConfetti, setShowConfetti] = React.useState(false);
 
@@ -107,21 +109,65 @@ export function ScholarshipChecker({ initialCollege }: { initialCollege?: string
     return () => window.clearTimeout(stateTimer);
   }, [step, showConfetti]);
 
-  function handleStartGenerate() {
+  async function handleStartGenerate() {
     if (!name.trim() || !phone.trim() || !stream || !scoreBand || !collegeId) return;
-    const created = addLead({
-      name: name.trim(),
-      phone: phone.trim(),
-      email: email.trim() || undefined,
-      stream,
-      scoreBand,
-      targetCollege: collegeId,
-      lookingFor: "Scholarship & Admission",
-      source: "Scholarship Checker",
-    });
-    setLoadingIdx(0);
-    setLead(created);
-    setStep("loading");
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          email: email.trim() || undefined,
+          stream,
+          scoreBand,
+          targetCollege: collegeId,
+          lookingFor: "Scholarship & Admission",
+          source: "Scholarship Checker",
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save your details");
+      }
+      const data = await res.json();
+      const collegeName =
+        MBA_PGDM_COLLEGES.find((c) => c.id === collegeId)?.name ??
+        colleges.find((c) => c.id === collegeId)?.name ??
+        collegeId;
+      const createdLead: Lead = {
+        id: data.lead.id,
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim() || undefined,
+        intentLevel: (data.lead.intentLevel ?? "Warm") as Lead["intentLevel"],
+        scoreBand,
+        scholarshipUnlocked: Number(data.lead.scholarshipAmount ?? 0),
+        lookingFor: "Scholarship & Admission",
+        targetCollege: data.lead.targetCollege ?? collegeName,
+        status: "New",
+        callConnected: false,
+        source: "Scholarship Checker",
+        createdAt: data.lead.createdAt ?? new Date().toISOString(),
+        agent: data.lead.assignedAgent ?? "Orion Desk",
+        callStatus: "Not Called",
+        interestStatus: "Not Assessed",
+        remarks: [],
+        intentScore: 0,
+        intentReasons: [],
+        leadType: "scholarship",
+        scholarshipApplied: true,
+      };
+      setLead(createdLead);
+      setLoadingIdx(0);
+      setStep("loading");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function handleClaim() {
@@ -347,13 +393,16 @@ export function ScholarshipChecker({ initialCollege }: { initialCollege?: string
                 <Button
                   variant="gold"
                   className="h-12 flex-1"
-                  disabled={!collegeId}
+                  disabled={!collegeId || submitting}
                   onClick={handleStartGenerate}
                 >
                   <Sparkles className="h-4 w-4" />
-                  Generate my scholarship
+                  {submitting ? "Saving..." : "Generate my scholarship"}
                 </Button>
               </div>
+              {error && (
+                <p className="mt-3 text-center text-sm font-medium text-red-600">{error}</p>
+              )}
             </motion.div>
           )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BadgeCheck, Phone, Rocket, Sparkles, User } from "lucide-react";
+import { AlertCircle, BadgeCheck, Phone, Rocket, Sparkles, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,32 +13,50 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useAppStore";
 import type { College } from "@/store/types";
 
 const TIMELINES = ["This admission cycle", "Within 1 month", "Within 3 months", "Just exploring"];
 
 export function EnquirySidebar({ college }: { college: College }) {
-  const addLead = useAppStore((s) => s.addLead);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [program, setProgram] = useState<string>(college.programs[0]?.name ?? "");
   const [timeline, setTimeline] = useState<string>(TIMELINES[0]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!name.trim() || phone.trim().length < 10) return;
-    const selected = college.programs.find((p) => p.name === program) ?? college.programs[0];
-    addLead({
-      name: name.trim(),
-      phone: phone.trim(),
-      stream: selected?.stream ?? "Engineering",
-      scoreBand: "75-90",
-      targetCollege: college.id,
-      lookingFor: `${selected?.name ?? "Admission"} · ${timeline}`,
-      source: "College Enquiry",
-    });
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+    try {
+      const selected = college.programs.find((p) => p.name === program) ?? college.programs[0];
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          stream: selected?.stream ?? "Engineering",
+          scoreBand: "75-90",
+          targetCollege: college.id,
+          targetProgram: selected?.name ?? null,
+          lookingFor: selected?.name ?? "Admission",
+          admissionTimeline: timeline,
+          source: "College Enquiry",
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to submit enquiry");
+      }
+      setSubmitted(true);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -122,13 +140,20 @@ export function EnquirySidebar({ college }: { college: College }) {
             </div>
           </div>
 
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
+          )}
+
           <Button
             variant="gold"
             className="h-12 w-full"
-            disabled={!name.trim() || phone.trim().length < 10}
+            disabled={!name.trim() || phone.trim().length < 10 || loading}
             onClick={handleSubmit}
           >
-            <Sparkles className="h-4 w-4" /> Get free counselling
+            <Sparkles className="h-4 w-4" /> {loading ? "Sending..." : "Get free counselling"}
           </Button>
           <p className="flex items-center justify-center gap-1.5 text-[11px] text-surface-500">
             <BadgeCheck className="h-3.5 w-3.5 text-gold-700" /> No payment required

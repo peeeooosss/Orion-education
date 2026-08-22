@@ -6,6 +6,7 @@ import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { computeScholarship, computeIntentLevel } from "@/lib/scholarship";
 import type { Stream, ScoreBand } from "@/lib/scholarship";
+import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookie();
@@ -248,18 +249,31 @@ export async function POST(req: NextRequest) {
     const st = (stream || "Engineering") as Stream;
     const collegeData = targetCollege || collegeId || "";
 
+    // Resolve a human-readable college name (Orion directory id → DB college → raw value)
+    const dirMatch = MBA_PGDM_COLLEGES.find((c) => c.id === collegeData);
+    let collegeName = dirMatch?.name ?? null;
+
     // Get college rating for scholarship computation
     let collegeRating = 4;
-    if (collegeId || targetCollege) {
+    if (collegeData) {
       const c = await db
-        .select({ rating: colleges.rating })
+        .select({ name: colleges.name, rating: colleges.rating })
         .from(colleges)
-        .where(eq(colleges.id, collegeId || targetCollege || ""))
+        .where(eq(colleges.id, collegeData))
         .limit(1);
-      if (c[0]) collegeRating = Number(c[0].rating) || 4;
+      if (c[0]) {
+        collegeRating = Number(c[0].rating) || 4;
+        collegeName = collegeName ?? c[0].name;
+      }
     }
 
-    const scholarship = computeScholarship({ stream: st, scoreBand: sb, collegeRating });
+    const targetDisplay = collegeName ?? collegeData;
+
+    // Orion partner colleges have capped MBA scholarships (mirrors client store logic)
+    const scholarship =
+      dirMatch?.isPartnered && st === "MBA"
+        ? dirMatch.maxScholarship
+        : computeScholarship({ stream: st, scoreBand: sb, collegeRating });
     const intent = computeIntentLevel({ scoreBand: sb, scholarship });
 
     const leadId = `l-${nanoid(12)}`;
@@ -273,8 +287,8 @@ export async function POST(req: NextRequest) {
       stage: "New",
       source: source,
       leadType,
-      lookingFor: lookingFor || `${targetProgram || collegeData} · ${admissionTimeline || "This admission cycle"}`,
-      targetCollege: collegeData,
+      lookingFor: lookingFor || `${targetProgram || targetDisplay} · ${admissionTimeline || "This admission cycle"}`,
+      targetCollege: targetDisplay,
       targetProgram: targetProgram || null,
       admissionTimeline: admissionTimeline || null,
       scholarshipAmount: String(scholarship),
@@ -319,7 +333,7 @@ export async function POST(req: NextRequest) {
       dueAt: new Date(Date.now() + 30 * 60 * 1000),
       followType: "Call",
       priority: leadType === "scholarship" ? "Important" : "Normal",
-      note: `New ${leadType} lead from ${source}. Call to discuss ${targetProgram || collegeData || "admission"}.`,
+      note: `New ${leadType} lead from ${source}. Call to discuss ${targetProgram || targetDisplay || "admission"}.`,
     });
 
     console.log(`[leads POST] Created ${leadType} lead ${leadId} agent=${assignedAgent.id} (${Date.now() - start}ms)`);
@@ -331,7 +345,9 @@ export async function POST(req: NextRequest) {
         phone: phoneNorm,
         source,
         leadType,
-        targetCollege: collegeData,
+        targetCollege: targetDisplay,
+        scholarshipAmount: scholarship,
+        intentLevel: intent,
         assignedAgent: assignedAgent.name ?? "Unassigned",
         createdAt: now.toISOString(),
       },

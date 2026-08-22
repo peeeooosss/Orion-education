@@ -81,7 +81,7 @@ export function AdminDashboard() {
   React.useEffect(() => {
     fetch("/api/website-leads?limit=1")
       .then((r) => r.json())
-      .then((d) => setWebsiteLeadCount(d.count ?? 0))
+      .then((d) => setWebsiteLeadCount(d.total ?? d.count ?? 0))
       .catch(() => {});
   }, []);
 
