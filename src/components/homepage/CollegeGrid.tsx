@@ -177,34 +177,67 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
                   isPartner ? "border-blue-300 ring-1 ring-blue-100" : "border-surface-200"
                 }`}
               >
-                <Link
-                  href={`/college/${college.id}`}
-                  className={`relative flex min-h-44 w-full items-start justify-between overflow-hidden bg-cover bg-center p-5 ${isPartner ? "bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700" : "bg-brand-gradient"}`}
-                  style={coverMap[college.id] ? { backgroundImage: `linear-gradient(180deg, rgba(15,13,46,.25), rgba(15,13,46,.72)), url(${coverMap[college.id]})` } : undefined}
-                >
-                  <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-                  {cardLogo && (
-                    <div className="absolute right-4 top-4">
-                      {cardLogo.onDark ? (
-                        <CollegeLogo logo={cardLogo} className="h-11 w-11 rounded-lg object-contain drop-shadow" />
-                      ) : (
-                        <div className="rounded-lg bg-white p-1.5 shadow-sm">
-                          <CollegeLogo logo={cardLogo} className="h-9 w-9 object-contain" />
+                <Link href={`/college/${college.id}`} className="block">
+                  <div className="relative overflow-hidden">
+                    {coverMap[college.id] ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={coverMap[college.id]}
+                          alt={`${college.name} campus`}
+                          className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          style={{ aspectRatio: "16/9" }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                        />
+                        <div
+                          className={`hidden w-full items-center justify-center px-4 ${isPartner ? "bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-800" : "bg-brand-gradient"}`}
+                          style={{ aspectRatio: "16/9" }}
+                        >
+                          <p className="text-center text-sm font-bold text-white/70">{college.name}</p>
                         </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="relative">
-                    <div className="flex flex-wrap gap-2">
-                      {isPartner && <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700"><BadgeCheck className="h-3 w-3" /> Orion Partner</span>}
-                      <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold text-white">{college.region}</span>
-                    </div>
-                    <p className={`mt-8 font-display text-xl font-bold text-white ${cardLogo ? "max-w-[15rem]" : "max-w-[18rem]"}`}>{college.name}</p>
-                    <p className="mt-1 flex items-start gap-1 text-xs text-white/75"><MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {college.location}</p>
+                      </>
+                    ) : (
+                      <div
+                        className={`flex w-full items-center justify-center px-4 ${isPartner ? "bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-800" : "bg-brand-gradient"}`}
+                        style={{ aspectRatio: "16/9" }}
+                      >
+                        <p className="text-center text-sm font-bold text-white/70">{college.name}</p>
+                      </div>
+                    )}
+                    {cardLogo && (
+                      <div className="absolute right-3 top-3">
+                        {cardLogo.onDark ? (
+                          <CollegeLogo logo={cardLogo} className="h-10 w-10 rounded-lg object-contain drop-shadow" />
+                        ) : (
+                          <div className="rounded-lg bg-white p-1.5 shadow-sm">
+                            <CollegeLogo logo={cardLogo} className="h-8 w-8 object-contain" />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </Link>
 
-                <div className="flex flex-1 flex-col p-6">
+                <div className="p-5 pb-0">
+                  <Link href={`/college/${college.id}`}>
+                    <h3 className="line-clamp-2 font-display text-base font-bold leading-snug text-brand-950 transition-colors hover:text-gold-700">{college.name}</h3>
+                  </Link>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {isPartner && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700 ring-1 ring-blue-200">
+                        <BadgeCheck className="h-3 w-3" /> Orion Partner
+                      </span>
+                    )}
+                    <span className="rounded-full bg-surface-100 px-2.5 py-0.5 text-[10px] font-semibold text-surface-600">{college.region}</span>
+                  </div>
+                  <p className="mt-1.5 flex items-start gap-1 text-xs text-surface-600"><MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {college.location}</p>
+                </div>
+
+                <div className="flex flex-1 flex-col p-5 pt-4">
                   <div className="space-y-2">
                     {college.courses.map((course) => (
                       <div key={course.name} className="flex items-start justify-between gap-3 rounded-xl bg-surface-50 px-3 py-2.5">
