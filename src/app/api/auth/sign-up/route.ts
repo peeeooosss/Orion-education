@@ -50,9 +50,7 @@ export async function POST(request: Request) {
       role: role || "student",
     });
 
-    await setSessionCookie(token);
-
-    return NextResponse.json({
+    return setSessionCookie(token, {
       user: {
         id: userId,
         name: name.trim(),

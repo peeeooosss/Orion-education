@@ -46,10 +46,8 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    await setSessionCookie(token);
-
     console.log(`[sign-in] OK: ${user.id} role=${user.role} (${Date.now() - start}ms)`);
-    return NextResponse.json({
+    return setSessionCookie(token, {
       user: {
         id: user.id,
         name: user.name,

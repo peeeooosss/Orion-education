@@ -40,24 +40,37 @@ function toEnquiryCollege(college: CollegeDirectoryEntry): EnquiryCollege {
   };
 }
 
+interface DbCardOverlay {
+  name?: string;
+  city?: string;
+  coverImage?: string | null;
+  logoUrl?: string | null;
+  logoOnDark?: boolean;
+}
+
 export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSort }: CollegeGridProps) {
   const [enquiryCollege, setEnquiryCollege] = useState<EnquiryCollege | null>(null);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const [coverMap, setCoverMap] = useState<Record<string, string>>({});
+  const [dbMap, setDbMap] = useState<Record<string, DbCardOverlay>>({});
 
-  // Admin-managed cover images (DB) overlay the static directory cards.
+  // Admin-managed DB values overlay the static directory cards.
   useEffect(() => {
     fetch("/api/colleges")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d?.colleges) return;
-        const map: Record<string, string> = {};
+        const map: Record<string, DbCardOverlay> = {};
         for (const c of d.colleges) {
-          const cover = c.partnerProfile?.heroImage?.url || c.coverImage;
-          if (cover) map[c.id] = cover;
+          map[c.id] = {
+            name: c.name,
+            city: c.city,
+            coverImage: c.partnerProfile?.heroImage?.url || c.coverImage || null,
+            logoUrl: c.partnerProfile?.logos?.[0]?.url || null,
+            logoOnDark: c.partnerProfile?.logos?.[0]?.onDark ?? false,
+          };
         }
-        setCoverMap(map);
+        setDbMap(map);
       })
       .catch(() => {});
   }, []);
@@ -168,8 +181,14 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
           {visible.map((college) => {
             const scholarshipCourse = college.courses.find((course) => canReceiveOrionScholarship(college, course.name));
             const isPartner = college.isPartnered;
+            const db = dbMap[college.id];
+            const displayName = db?.name || college.name;
+            const displayLocation = db?.city || college.location;
             const cardProfile = isPartner ? getPartnerProfile(college.id) : undefined;
-            const cardLogo = cardProfile?.logos[0];
+            const cardLogo = db?.logoUrl
+              ? { url: db.logoUrl, alt: displayName, onDark: db.logoOnDark }
+              : cardProfile?.logos[0];
+            const heroPhoto = db?.coverImage || undefined;
             return (
               <div
                 key={college.id}
@@ -179,12 +198,12 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
               >
                 <Link href={`/college/${college.id}`} className="block">
                   <div className="relative overflow-hidden">
-                    {coverMap[college.id] ? (
+                    {heroPhoto ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={coverMap[college.id]}
-                          alt={`${college.name} campus`}
+                          src={heroPhoto}
+                          alt={`${displayName} campus`}
                           className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
                           style={{ aspectRatio: "16/9" }}
                           onError={(e) => {
@@ -197,7 +216,7 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
                           className={`hidden w-full items-center justify-center px-4 ${isPartner ? "bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-800" : "bg-brand-gradient"}`}
                           style={{ aspectRatio: "16/9" }}
                         >
-                          <p className="text-center text-sm font-bold text-white/70">{college.name}</p>
+                          <p className="text-center text-sm font-bold text-white/70">{displayName}</p>
                         </div>
                       </>
                     ) : (
@@ -205,7 +224,7 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
                         className={`flex w-full items-center justify-center px-4 ${isPartner ? "bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-800" : "bg-brand-gradient"}`}
                         style={{ aspectRatio: "16/9" }}
                       >
-                        <p className="text-center text-sm font-bold text-white/70">{college.name}</p>
+                        <p className="text-center text-sm font-bold text-white/70">{displayName}</p>
                       </div>
                     )}
                     {cardLogo && (
@@ -224,7 +243,7 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
 
                 <div className="p-5 pb-0">
                   <Link href={`/college/${college.id}`}>
-                    <h3 className="line-clamp-2 font-display text-base font-bold leading-snug text-brand-950 transition-colors hover:text-gold-700">{college.name}</h3>
+                    <h3 className="line-clamp-2 font-display text-base font-bold leading-snug text-brand-950 transition-colors hover:text-gold-700">{displayName}</h3>
                   </Link>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     {isPartner && (
@@ -234,7 +253,7 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
                     )}
                     <span className="rounded-full bg-surface-100 px-2.5 py-0.5 text-[10px] font-semibold text-surface-600">{college.region}</span>
                   </div>
-                  <p className="mt-1.5 flex items-start gap-1 text-xs text-surface-600"><MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {college.location}</p>
+                  <p className="mt-1.5 flex items-start gap-1 text-xs text-surface-600"><MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {displayLocation}</p>
                 </div>
 
                 <div className="flex flex-1 flex-col p-5 pt-4">

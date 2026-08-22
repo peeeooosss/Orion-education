@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BadgeCheck, BadgePercent, CalendarDays, ExternalLink, GraduationCap, Landmark, PhoneCall, ShieldCheck } from "lucide-react";
+import { BadgeCheck, BadgePercent, CalendarDays, ExternalLink, GraduationCap, Landmark, PhoneCall, ShieldCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
@@ -38,6 +38,15 @@ interface DbCollegeOverlay {
   about?: string | null;
   campusVideos?: DbCampusVideo[] | null;
   programs?: DbProgram[] | null;
+  type?: string | null;
+  rating?: string | number | null;
+  established?: number | null;
+  tags?: string[] | null;
+  ranking?: string | null;
+  placementPct?: string | number | null;
+  highestPlacement?: string | null;
+  intake?: number | null;
+  facilities?: string[] | null;
   partnerProfile?: {
     website?: string;
     tagline?: string;
@@ -130,6 +139,22 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
       ].filter(Boolean)
     : [];
 
+  // Admin-managed DB stats (fall back to nothing when unset).
+  const dbRating = dbData?.rating != null ? Number(dbData.rating) : null;
+  const dbType = dbData?.type || undefined;
+  const dbEstablished = dbData?.established ?? undefined;
+  const dbTags = (dbData?.tags ?? []).filter(Boolean);
+  const dbPlacementPct = dbData?.placementPct != null ? Number(dbData.placementPct) : null;
+  const highestPlacementNum = dbData?.highestPlacement != null ? Number(dbData.highestPlacement) : null;
+  const dbHighestPlacement = highestPlacementNum != null && highestPlacementNum > 0 ? formatDbFee(dbData.highestPlacement) : null;
+  const dbRanking = dbData?.ranking || null;
+  const dbIntake = dbData?.intake ?? null;
+  const dbFacilities = (dbData?.facilities ?? []).filter(Boolean);
+
+  const hasStatsSection = Boolean(
+    dbPlacementPct || dbHighestPlacement || dbRanking || dbIntake || dbFacilities.length > 0,
+  );
+
   return (
     <div className="flex min-h-screen flex-col bg-surface-50">
       <SiteHeader />
@@ -141,6 +166,10 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
             location={college.location}
             region={college.region}
             isPartner={isPartner}
+            type={dbType}
+            rating={dbRating ?? undefined}
+            established={dbEstablished}
+            tags={dbTags.length > 0 ? dbTags : undefined}
             heroPhoto={profile?.heroImage?.url}
             logo={profile?.logos?.[0]}
             tagline={profile?.tagline}
@@ -197,6 +226,52 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
                       <div className="mt-3 flex flex-wrap gap-2">
                         {profile.specializations.map((spec) => (
                           <span key={spec} className="rounded-full border border-surface-200 bg-surface-50 px-3 py-1.5 text-xs font-semibold text-surface-700">{spec}</span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </section>
+              )}
+
+              {/* Placements & key stats (admin-managed) */}
+              {hasStatsSection && (
+                <section className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-gold-700" />
+                    <h2 className="font-display text-xl font-bold text-surface-900">Placements &amp; key stats</h2>
+                  </div>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {dbPlacementPct != null && dbPlacementPct > 0 && (
+                      <div className="rounded-2xl bg-surface-50 p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-500">Placement rate</p>
+                        <p className="mt-1 font-display text-2xl font-black text-surface-900">{dbPlacementPct}%</p>
+                      </div>
+                    )}
+                    {dbHighestPlacement && (
+                      <div className="rounded-2xl bg-surface-50 p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-500">Highest package</p>
+                        <p className="mt-1 font-display text-2xl font-black text-surface-900">{dbHighestPlacement}</p>
+                      </div>
+                    )}
+                    {dbIntake != null && dbIntake > 0 && (
+                      <div className="rounded-2xl bg-surface-50 p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-500">Annual intake</p>
+                        <p className="mt-1 font-display text-2xl font-black text-surface-900">{dbIntake}</p>
+                      </div>
+                    )}
+                    {dbRanking && (
+                      <div className="rounded-2xl bg-surface-50 p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-500">Ranking</p>
+                        <p className="mt-1 font-display text-lg font-bold text-surface-900">{dbRanking}</p>
+                      </div>
+                    )}
+                  </div>
+                  {dbFacilities.length > 0 && (
+                    <>
+                      <h3 className="mt-6 font-display text-base font-bold text-surface-900">Facilities</h3>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {dbFacilities.map((facility) => (
+                          <span key={facility} className="rounded-full border border-surface-200 bg-surface-50 px-3 py-1.5 text-xs font-semibold text-surface-700">{facility}</span>
                         ))}
                       </div>
                     </>
