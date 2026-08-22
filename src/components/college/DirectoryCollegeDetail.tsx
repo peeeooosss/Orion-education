@@ -146,7 +146,7 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
   const dbTags = (dbData?.tags ?? []).filter(Boolean);
   const dbPlacementPct = dbData?.placementPct != null ? Number(dbData.placementPct) : null;
   const highestPlacementNum = dbData?.highestPlacement != null ? Number(dbData.highestPlacement) : null;
-  const dbHighestPlacement = highestPlacementNum != null && highestPlacementNum > 0 ? formatDbFee(dbData.highestPlacement) : null;
+  const dbHighestPlacement = highestPlacementNum != null && highestPlacementNum > 0 ? formatDbFee(dbData?.highestPlacement) : null;
   const dbRanking = dbData?.ranking || null;
   const dbIntake = dbData?.intake ?? null;
   const dbFacilities = (dbData?.facilities ?? []).filter(Boolean);
