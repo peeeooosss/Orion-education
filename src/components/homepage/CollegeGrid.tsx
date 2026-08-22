@@ -44,6 +44,23 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
   const [enquiryCollege, setEnquiryCollege] = useState<EnquiryCollege | null>(null);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
+  const [coverMap, setCoverMap] = useState<Record<string, string>>({});
+
+  // Admin-managed cover images (DB) overlay the static directory cards.
+  useEffect(() => {
+    fetch("/api/colleges")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d?.colleges) return;
+        const map: Record<string, string> = {};
+        for (const c of d.colleges) {
+          const cover = c.partnerProfile?.heroImage?.url || c.coverImage;
+          if (cover) map[c.id] = cover;
+        }
+        setCoverMap(map);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SAVED_COLLEGES_KEY);
@@ -160,7 +177,11 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
                   isPartner ? "border-blue-300 ring-1 ring-blue-100" : "border-surface-200"
                 }`}
               >
-                <Link href={`/college/${college.id}`} className={`relative flex min-h-44 w-full items-start justify-between p-5 ${isPartner ? "bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700" : "bg-brand-gradient"}`}>
+                <Link
+                  href={`/college/${college.id}`}
+                  className={`relative flex min-h-44 w-full items-start justify-between overflow-hidden bg-cover bg-center p-5 ${isPartner ? "bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700" : "bg-brand-gradient"}`}
+                  style={coverMap[college.id] ? { backgroundImage: `linear-gradient(180deg, rgba(15,13,46,.25), rgba(15,13,46,.72)), url(${coverMap[college.id]})` } : undefined}
+                >
                   <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
                   {cardLogo && (
                     <div className="absolute right-4 top-4">
