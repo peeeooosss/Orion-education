@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Building2,
   Plus,
@@ -13,6 +13,9 @@ import {
   GraduationCap,
   Play,
   GripVertical,
+  ImagePlus,
+  Upload,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,6 +171,10 @@ export default function AdminCollegesPage() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const photosInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   useEffect(() => {
     fetchColleges();
@@ -183,6 +190,59 @@ export default function AdminCollegesPage() {
       }
     } catch {}
     setLoading(false);
+  }
+
+  async function uploadFile(file: File, folder: string): Promise<string | null> {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", folder);
+    try {
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.url;
+    } catch { return null; }
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    const url = await uploadFile(file, "colleges/cover");
+    if (url) setForm((p) => ({ ...p, coverImage: url }));
+    setUploadingCover(false);
+    if (coverInputRef.current) coverInputRef.current.value = "";
+  }
+
+  async function handlePhotosUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingPhotos(true);
+    const urls: string[] = [];
+    for (const file of Array.from(files)) {
+      const url = await uploadFile(file, "colleges/photos");
+      if (url) urls.push(url);
+    }
+    if (urls.length > 0) {
+      setForm((p) => ({
+        ...p,
+        photos: p.photos ? p.photos + "\n" + urls.join("\n") : urls.join("\n"),
+      }));
+    }
+    setUploadingPhotos(false);
+    if (photosInputRef.current) photosInputRef.current.value = "";
+  }
+
+  function removeCoverImage() {
+    setForm((p) => ({ ...p, coverImage: "" }));
+  }
+
+  function removePhoto(idx: number) {
+    setForm((p) => {
+      const lines = p.photos.split("\n").filter((u) => u.trim());
+      lines.splice(idx, 1);
+      return { ...p, photos: lines.join("\n") };
+    });
   }
 
   function startCreate() {
@@ -723,26 +783,73 @@ export default function AdminCollegesPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>Cover Image URL</Label>
-              <Input
-                value={form.coverImage}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, coverImage: e.target.value }))
-                }
-                className="rounded-xl"
-              />
+              <Label>Cover Image</Label>
+              <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+              {form.coverImage ? (
+                <div className="relative overflow-hidden rounded-xl border border-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={form.coverImage} alt="Cover" className="h-32 w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={removeCoverImage}
+                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={uploadingCover}
+                  className="flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-brand-400 hover:bg-brand-50"
+                >
+                  {uploadingCover ? (
+                    <span className="text-sm text-slate-500">Uploading...</span>
+                  ) : (
+                    <>
+                      <Upload className="h-6 w-6 text-slate-400" />
+                      <span className="text-sm font-medium text-slate-500">Upload cover image</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label>Photos (one URL per line)</Label>
-            <textarea
-              value={form.photos}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, photos: e.target.value }))
-              }
-              className="h-20 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-            />
+          <div className="space-y-2">
+            <Label>Photos</Label>
+            <input ref={photosInputRef} type="file" accept="image/*" multiple onChange={handlePhotosUpload} className="hidden" />
+            <div className="flex flex-wrap gap-3">
+              {form.photos.split("\n").filter((u) => u.trim()).map((url, idx) => (
+                <div key={`${url}-${idx}`} className="group relative overflow-hidden rounded-xl border border-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt={`Photo ${idx + 1}`} className="h-24 w-24 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(idx)}
+                    className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => photosInputRef.current?.click()}
+                disabled={uploadingPhotos}
+                className="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-brand-400 hover:bg-brand-50"
+              >
+                {uploadingPhotos ? (
+                  <span className="text-[11px] text-slate-500">Uploading...</span>
+                ) : (
+                  <>
+                    <ImagePlus className="h-5 w-5 text-slate-400" />
+                    <span className="text-[11px] font-medium text-slate-500">Add photos</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-6">
