@@ -133,7 +133,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-3">
           <Button variant="gold" size="sm" className="hidden uppercase tracking-wide sm:inline-flex" onClick={openEnquiry}>
-            Enquiry Now
+            Enquire Now
           </Button>
           {!authUser ? (
             <Link href="/auth/sign-in">
@@ -189,7 +189,7 @@ export function SiteHeader() {
             onClick={() => { setOpen(false); openEnquiry(); }}
             className="block w-full rounded-lg bg-brand-gradient px-3 py-2 text-left text-sm font-bold uppercase tracking-wide text-white"
           >
-            Enquiry Now
+            Enquire Now
           </button>
           {navLinks.map((link) => (
             <Link key={link.label} href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">

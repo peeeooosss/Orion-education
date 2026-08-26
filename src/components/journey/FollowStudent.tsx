@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { ArrowRight, BadgeCheck, GraduationCap, UserRound } from "lucide-react";
+import { BadgeCheck, GraduationCap, UserRound } from "lucide-react";
 import { LEAD_STATUSES } from "@/lib/scholarship";
 import { useAppStore, formatINR } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
@@ -162,9 +161,6 @@ export function FollowStudent() {
             <p className="text-xs text-surface-400">
               Step {selected.completed} of 8 reached · status kept in sync by Orion&apos;s CRM
             </p>
-            <Link href="/agent/dashboard" className="inline-flex items-center gap-1 text-sm font-semibold text-gold-700 hover:underline">
-              Open in Agent Portal <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
-            </Link>
           </div>
         </>
       )}

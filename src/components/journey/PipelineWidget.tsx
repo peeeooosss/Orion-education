@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { LEAD_STATUSES, isConverted } from "@/lib/scholarship";
 import { useAppStore } from "@/store/useAppStore";
 
@@ -37,14 +35,6 @@ export function PipelineWidget() {
           <div className="text-right">
             <p className="font-display text-2xl font-black text-gold-700">{conversionPct}%</p>
             <p className="text-[10px] text-surface-500">converted to application+</p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/agent/dashboard" className="inline-flex items-center gap-1 rounded-full bg-brand-950 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-900">
-              Agent portal <ArrowRight className="h-3 w-3" strokeWidth={1.75} />
-            </Link>
-            <Link href="/admin/dashboard" className="inline-flex items-center gap-1 rounded-full bg-gold-500 px-3 py-1.5 text-xs font-semibold text-brand-950 transition-colors hover:bg-gold-600">
-              Admin <ArrowRight className="h-3 w-3" strokeWidth={1.75} />
-            </Link>
           </div>
         </div>
       </div>
