@@ -9,6 +9,7 @@ import { MBA_PGDM_COLLEGES, canReceiveOrionScholarship, COLLEGE_REGIONS, type Co
 import { getPartnerProfile } from "@/data/partner-profiles";
 import { CollegeLogo } from "@/components/college/CollegeLogo";
 import type { Stream } from "@/lib/scholarship";
+import { inferRegion } from "@/lib/region";
 
 export type SortKey = "default" | "fee-asc" | "fee-desc" | "rating" | "placement";
 
@@ -40,6 +41,23 @@ function toEnquiryCollege(college: CollegeDirectoryEntry): EnquiryCollege {
   };
 }
 
+interface DbCollegRow {
+  id: string;
+  name: string;
+  shortName?: string | null;
+  city?: string | null;
+  rating?: string | null;
+  type?: string | null;
+  coverImage?: string | null;
+  partnerCollege?: boolean | null;
+  isPublished?: boolean | null;
+  programs: { name: string; annualFee?: string | null; totalFee?: string | null; stream?: string | null }[];
+  partnerProfile?: {
+    heroImage?: { url: string; alt: string; onDark?: boolean } | null;
+    logos?: { url: string; alt: string; onDark?: boolean }[];
+  } | null;
+}
+
 interface DbCardOverlay {
   name?: string;
   city?: string;
@@ -48,29 +66,89 @@ interface DbCardOverlay {
   logoOnDark?: boolean;
 }
 
+const REGION_MAP: Record<string, CollegeDirectoryEntry["region"]> = {
+  delhi: "Delhi/NCR",
+  ncr: "Delhi/NCR",
+  noida: "Delhi/NCR",
+  gurgaon: "Delhi/NCR",
+  gurugram: "Delhi/NCR",
+  greater_noida: "Delhi/NCR",
+  ghaziabad: "Delhi/NCR",
+  faridabad: "Delhi/NCR",
+  mumbai: "Mumbai/Pune",
+  pune: "Mumbai/Pune",
+  navi_mumbai: "Mumbai/Pune",
+  bangalore: "Bangalore",
+  bengaluru: "Bangalore",
+  bhubaneswar: "Bhubaneswar",
+  cuttack: "Bhubaneswar",
+  hyderabad: "Hyderabad/Kolkata",
+  kolkata: "Hyderabad/Kolkata",
+  west_bengal: "Hyderabad/Kolkata",
+  murshidabad: "Hyderabad/Kolkata",
+  dehradun: "Others",
+  uttarakhand: "Others",
+  rajkot: "Others",
+  gujarat: "Others",
+  mysore: "Others",
+  mysuru: "Others",
+};
+
+function dbFeeDisplay(fee?: string | null): string {
+  if (!fee) return "Fee on Request";
+  const num = Number(fee);
+  if (!Number.isFinite(num) || num <= 0) return "Fee on Request";
+  if (num >= 100000) return `₹${(num / 100000).toFixed(2)}L`;
+  return `₹${num.toLocaleString("en-IN")}`;
+}
+
+function dbCollegeToEntry(c: DbCollegRow): CollegeDirectoryEntry {
+  return {
+    id: c.id,
+    name: c.name,
+    region: inferRegion(c.city),
+    location: c.city || "",
+    courses: (c.programs || []).map((p) => ({
+      name: p.name,
+      fees: dbFeeDisplay(p.totalFee || p.annualFee),
+    })),
+    isPartnered: Boolean(c.partnerCollege),
+    scholarshipAvailable: Boolean(c.partnerCollege),
+    maxScholarship: c.partnerCollege ? 25000 : 0,
+  };
+}
+
 export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSort }: CollegeGridProps) {
   const [enquiryCollege, setEnquiryCollege] = useState<EnquiryCollege | null>(null);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [dbMap, setDbMap] = useState<Record<string, DbCardOverlay>>({});
+  const [dbOnlyColleges, setDbOnlyColleges] = useState<CollegeDirectoryEntry[]>([]);
 
   // Admin-managed DB values overlay the static directory cards.
+  // DB colleges not in the static directory are added as new entries.
   useEffect(() => {
     fetch("/api/colleges")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d?.colleges) return;
+        const staticIds = new Set(MBA_PGDM_COLLEGES.map((c) => c.id));
         const map: Record<string, DbCardOverlay> = {};
+        const only: CollegeDirectoryEntry[] = [];
         for (const c of d.colleges) {
           map[c.id] = {
             name: c.name,
             city: c.city,
-            coverImage: c.partnerProfile?.heroImage?.url || c.coverImage || null,
+            coverImage: c.coverImage || c.partnerProfile?.heroImage?.url || null,
             logoUrl: c.partnerProfile?.logos?.[0]?.url || null,
             logoOnDark: c.partnerProfile?.logos?.[0]?.onDark ?? false,
           };
+          if (!staticIds.has(c.id)) {
+            only.push(dbCollegeToEntry(c));
+          }
         }
         setDbMap(map);
+        setDbOnlyColleges(only);
       })
       .catch(() => {});
   }, []);
@@ -88,7 +166,9 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
     window.localStorage.setItem(SAVED_COLLEGES_KEY, JSON.stringify(next));
   }
 
-  const filtered = MBA_PGDM_COLLEGES.filter((college) => {
+  const allColleges = [...MBA_PGDM_COLLEGES, ...dbOnlyColleges];
+
+  const filtered = allColleges.filter((college) => {
     const q = search.trim().toLowerCase();
     const matchesSearch =
       !q ||

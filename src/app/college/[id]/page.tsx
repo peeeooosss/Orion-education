@@ -3,208 +3,129 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { BadgeCheck, BadgePercent, Building2, ExternalLink, PhoneCall, Users } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
-
-import { ProgramFacts } from "@/components/college/ProgramFacts";
-import { CampusReels } from "@/components/college/CampusReels";
-import { SmartEnquiryModal } from "@/components/college/SmartEnquiryModal";
-import { EnquirySidebar } from "@/components/college/EnquirySidebar";
-import { VisitWebsiteModal } from "@/components/college/VisitWebsiteModal";
-import { CollegeCover } from "@/components/college/CollegeCover";
 import { DirectoryCollegeDetail } from "@/components/college/DirectoryCollegeDetail";
-import { Button } from "@/components/ui/button";
-import { useAppStore, formatINR } from "@/store/useAppStore";
-import { estimateFromProfile } from "@/lib/scholarship";
-import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
-import { isMBAOrPGDMProgram } from "@/data/college-directory";
+import { MBA_PGDM_COLLEGES, type CollegeDirectoryEntry } from "@/data/college-directory";
+
+interface DbCollegeRaw {
+  id: string;
+  name: string;
+  city?: string | null;
+  coverImage?: string | null;
+  partnerCollege?: boolean | null;
+  isPublished?: boolean | null;
+  programs: { name: string; annualFee?: string | null; totalFee?: string | null; stream?: string | null }[];
+}
+
+const REGION_MAP: Record<string, CollegeDirectoryEntry["region"]> = {
+  delhi: "Delhi/NCR", ncr: "Delhi/NCR", noida: "Delhi/NCR", gurgaon: "Delhi/NCR",
+  gurugram: "Delhi/NCR", greater_noida: "Delhi/NCR", ghaziabad: "Delhi/NCR", faridabad: "Delhi/NCR",
+  mumbai: "Mumbai/Pune", pune: "Mumbai/Pune", navi_mumbai: "Mumbai/Pune",
+  bangalore: "Bangalore", bengaluru: "Bangalore",
+  bhubaneswar: "Bhubaneswar", cuttack: "Bhubaneswar",
+  hyderabad: "Hyderabad/Kolkata", kolkata: "Hyderabad/Kolkata", west_bengal: "Hyderabad/Kolkata", murshidabad: "Hyderabad/Kolkata",
+  dehradun: "Others", uttarakhand: "Others", rajkot: "Others", gujarat: "Others", mysore: "Others", mysuru: "Others",
+};
+
+function inferRegion(city?: string | null): CollegeDirectoryEntry["region"] {
+  if (!city) return "Others";
+  const lower = city.toLowerCase();
+  for (const [keyword, region] of Object.entries(REGION_MAP)) {
+    if (lower.includes(keyword)) return region;
+  }
+  return "Others";
+}
+
+function dbFeeDisplay(fee?: string | null): string {
+  if (!fee) return "Fee on Request";
+  const num = Number(fee);
+  if (!Number.isFinite(num) || num <= 0) return "Fee on Request";
+  if (num >= 100000) return `₹${(num / 100000).toFixed(2)}L`;
+  return `₹${num.toLocaleString("en-IN")}`;
+}
+
+function dbToDirectoryEntry(c: DbCollegeRaw): CollegeDirectoryEntry {
+  return {
+    id: c.id,
+    name: c.name,
+    region: inferRegion(c.city),
+    location: c.city || "",
+    courses: (c.programs || []).map((p) => ({
+      name: p.name,
+      fees: dbFeeDisplay(p.totalFee || p.annualFee),
+    })),
+    isPartnered: Boolean(c.partnerCollege),
+    scholarshipAvailable: Boolean(c.partnerCollege),
+    maxScholarship: c.partnerCollege ? 25000 : 0,
+  };
+}
 
 export default function CollegeDetailPage() {
   const params = useParams<{ id: string }>();
-  const directoryCollege = MBA_PGDM_COLLEGES.find((c) => c.id === params.id);
-  const college = useAppStore((s) => s.colleges.find((c) => c.id === params.id));
-  const profile = useAppStore((s) => s.studentProfile);
-  const [enquiryOpen, setEnquiryOpen] = React.useState(false);
-  const [visitOpen, setVisitOpen] = React.useState(false);
+  const staticCollege = MBA_PGDM_COLLEGES.find((c) => c.id === params.id);
+  const [dbFallback, setDbFallback] = React.useState<DbCollegeRaw | null>(null);
+  const [loading, setLoading] = React.useState(true);
 
-  if (directoryCollege) return <DirectoryCollegeDetail college={directoryCollege} />;
+  React.useEffect(() => {
+    if (staticCollege) { setLoading(false); return; }
+    fetch(`/api/colleges/${params.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.college) setDbFallback(d.college); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [params.id, staticCollege]);
 
-  if (!college) {
+  if (loading) {
     return (
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
-        <main className="flex flex-1 items-center justify-center p-8 text-center">
-          <div>
-            <Building2 className="mx-auto h-12 w-12 text-surface-300" strokeWidth={1.75} />
-            <h1 className="mt-4 font-display text-2xl font-bold text-surface-900">College not found</h1>
-            <Link href="/" className="mt-4 inline-block text-sm font-semibold text-gold-700 hover:underline">
-              ← Back to all colleges
-            </Link>
-          </div>
+        <main className="flex flex-1 items-center justify-center p-8">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-surface-300 border-t-gold-600" />
         </main>
         <Footer />
       </div>
     );
   }
 
-  const lowestFee = Math.min(...college.programs.map((p) => p.annualFee));
-  const estimate = estimateFromProfile(profile, college.rating);
-  const supportsOrionScholarship = Boolean(college.partnerCollege && college.programs.some((program) => isMBAOrPGDMProgram(program.name)));
+  if (staticCollege) return <DirectoryCollegeDetail college={staticCollege} />;
+
+  if (dbFallback) {
+    if (dbFallback.isPublished === false) {
+      return (
+        <div className="flex min-h-screen flex-col">
+          <SiteHeader />
+          <main className="flex flex-1 items-center justify-center p-8 text-center">
+            <div>
+              <Building2 className="mx-auto h-12 w-12 text-surface-300" strokeWidth={1.75} />
+              <h1 className="mt-4 font-display text-2xl font-bold text-surface-900">College not available</h1>
+              <p className="mt-2 text-sm text-surface-500">This college page is not currently published.</p>
+              <Link href="/" className="mt-4 inline-block text-sm font-semibold text-gold-700 hover:underline">
+                ← Back to all colleges
+              </Link>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      );
+    }
+    return <DirectoryCollegeDetail college={dbToDirectoryEntry(dbFallback)} />;
+  }
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-50">
+    <div className="flex min-h-screen flex-col">
       <SiteHeader />
-
-      <main className="flex-1 pb-24">
-        {/* Cover */}
-        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-          <CollegeCover
-            name={college.name}
-            location={college.city}
-            type={college.type ?? undefined}
-            rating={college.rating}
-            established={college.established}
-            tags={college.tags}
-            isPartner={college.partnerCollege ?? false}
-            heroPhoto={college.coverImage}
-            sourceWebsite={college.sourceWebsite ?? undefined}
-            onVisitWebsite={() => setVisitOpen(true)}
-            onEnquire={() => setEnquiryOpen(true)}
-          />
-        </div>
-
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mb-6 flex flex-wrap gap-4">
-            {[
-              { label: "Fee / yr", value: college.feesTbc ? "TBC" : `₹${(lowestFee / 100000).toFixed(2)}L` },
-              { label: "Placement", value: `${college.placementPct}%` },
-              { label: "Highest pkg", value: `₹${(college.highestPlacement / 100000).toFixed(1)}L` },
-              { label: "Intake", value: `${college.intake.toLocaleString("en-IN")}` },
-            ].map((s) => (
-              <div key={s.label} className="rounded-2xl border border-surface-200 bg-white px-5 py-3 text-center shadow-sm">
-                <p className="font-display text-xl font-bold text-brand-950">{s.value}</p>
-                <p className="text-[11px] text-surface-500">{s.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {supportsOrionScholarship && <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-gold-200 bg-gold-50 p-5 sm:flex-row sm:items-center">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-500 text-brand-950">
-                <BadgePercent className="h-5 w-5" strokeWidth={1.75} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-surface-900">Eligibility alert</p>
-                <p className="mt-0.5 text-sm text-surface-700">
-                  Based on your profile ({profile.stream}, {profile.scoreBand}), you may be eligible for up to{" "}
-                  <span className="font-bold text-gold-700">{formatINR(estimate)}</span> in scholarships at{" "}
-                  {college.shortName}.
-                </p>
-              </div>
-            </div>
-            <Link href={`/scholarship?college=${college.id}`}>
-              <Button variant="brandGradient" className="!px-6 !py-3 text-sm">Check my eligibility</Button>
-            </Link>
-          </div>}
-
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-6 lg:col-span-2">
-              <section className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
-                <h2 className="font-display text-lg font-bold text-surface-900">About {college.shortName}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-surface-700">{college.about}</p>
-                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {college.facilities.map((f) => (
-                    <div key={f} className="flex items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 text-xs font-medium text-surface-700">
-                      <BadgeCheck className="h-4 w-4 shrink-0 text-gold-700" strokeWidth={1.75} />
-                      {f}
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <CampusReels videos={college.campusVideos || []} />
-              <ProgramFacts college={college} />
-            </div>
-
-            <div className="sticky top-24 space-y-6 self-start">
-              <EnquirySidebar college={college} />
-
-              {supportsOrionScholarship && <div className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
-                <div className="flex items-center gap-2">
-                  <BadgePercent className="h-5 w-5 text-gold-700" strokeWidth={1.75} />
-                  <p className="font-display text-lg font-bold text-surface-900">Scholarships & financial aid</p>
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-surface-700">{college.scholarships.details}</p>
-                <div className="mt-4 rounded-2xl bg-gold-50 p-4">
-                  <p className="text-xs font-medium text-gold-700">Your estimated eligibility</p>
-                  <p className="mt-1 font-display text-2xl font-black text-surface-900">{formatINR(estimate)}</p>
-                  <p className="mt-1 text-xs text-surface-600">
-                    Unlocked with your {profile.stream} · {profile.scoreBand} profile
-                  </p>
-                </div>
-                <Link href={`/scholarship?college=${college.id}`} className="mt-4 block">
-                  <Button variant="outline" className="w-full border-gold-200 text-gold-700 hover:bg-gold-50">
-                    Check full eligibility →
-                  </Button>
-                </Link>
-              </div>}
-
-              <div className="rounded-3xl border border-surface-200 bg-white p-6 shadow-card">
-                <p className="text-sm font-semibold text-surface-900">Why students choose {college.shortName}</p>
-                <ul className="mt-3 space-y-3">
-                  {[
-                    `₹${(college.programs[0].avgPlacement / 100000).toFixed(1)}L average package in ${college.programs[0].name}`,
-                    `${college.placementPct}% of batch placed in the last academic year`,
-                    `${college.intake.toLocaleString("en-IN")} seats — competitive but accessible via Orion`,
-                  ].map((point, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-surface-700">
-                      <Users className="mt-0.5 h-4 w-4 shrink-0 text-gold-700" strokeWidth={1.75} />
-                      {point}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
+      <main className="flex flex-1 items-center justify-center p-8 text-center">
+        <div>
+          <Building2 className="mx-auto h-12 w-12 text-surface-300" strokeWidth={1.75} />
+          <h1 className="mt-4 font-display text-2xl font-bold text-surface-900">College not found</h1>
+          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-gold-700 hover:underline">
+            ← Back to all colleges
+          </Link>
         </div>
       </main>
-
       <Footer />
-
-      <div className="sticky bottom-0 z-40 border-t border-surface-200 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <div>
-            <p className="text-sm font-semibold text-surface-900">{college.name}</p>
-            <p className="text-xs text-surface-500">
-              {supportsOrionScholarship ? "MBA/PGDM scholarship available · " : ""}{college.placementPct}% placement
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            {college.sourceWebsite && (
-              <Button
-                onClick={() => setVisitOpen(true)}
-                variant="outline"
-                className="!h-11 !px-5"
-              >
-                <ExternalLink className="h-4 w-4" strokeWidth={1.75} />
-                Visit website
-              </Button>
-            )}
-            <Button
-              onClick={() => setEnquiryOpen(true)}
-              variant="gold"
-              className="!h-11 !px-5 !text-base"
-            >
-              <PhoneCall className="h-4 w-4" strokeWidth={1.75} />
-              Get free counselling
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <SmartEnquiryModal college={college} open={enquiryOpen} onOpenChange={setEnquiryOpen} />
-      <VisitWebsiteModal college={college} open={visitOpen} onOpenChange={setVisitOpen} />
     </div>
   );
 }

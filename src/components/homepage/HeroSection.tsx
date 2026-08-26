@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal } from "lucide-react";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { STREAM_OPTIONS, type Stream } from "@/lib/scholarship";
 import { PARTNER_COLLEGE_COUNT } from "@/data/college-directory";
+import { CollegeSearchAutocomplete } from "@/components/college/CollegeSearchAutocomplete";
 
 const HERO_POSTER = "/images/hero/slide1.jpg";
 
@@ -36,6 +38,7 @@ interface HeroSectionProps {
 
 export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionProps) {
   const [slideIdx, setSlideIdx] = React.useState(0);
+  const router = useRouter();
 
   React.useEffect(() => {
     const slideTimer = setInterval(() => setSlideIdx((i) => (i + 1) % HERO_SLIDES.length), 4000);
@@ -47,6 +50,10 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
   function pickStream(value: Stream) {
     onStream(stream === value ? null : value);
     document.getElementById("colleges")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function handleCollegeSelect(college: { id: string; name: string }) {
+    router.push(`/college/${college.id}`);
   }
 
   const slide = HERO_SLIDES[slideIdx];
@@ -100,13 +107,12 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
           </div>
 
           <div className="mx-auto mt-6 flex max-w-xl items-center gap-2 rounded-2xl border border-white/20 bg-white/70 p-2 shadow-glass backdrop-blur-xl">
-            <Search className="ml-3 h-5 w-5 shrink-0 text-surface-400" />
-            <Input
+            <CollegeSearchAutocomplete
               value={search}
-              onChange={(e) => onSearch(e.target.value)}
+              onChange={onSearch}
+              onSelect={handleCollegeSelect}
               placeholder="Search by college, program or city..."
-              className="h-12 border-0 bg-transparent text-surface-900 placeholder:text-surface-400 focus-visible:ring-0"
-              aria-label="Search colleges"
+              className="w-full"
             />
             <a href="#colleges" className="shrink-0">
               <Button variant="brandGradient" className="!px-6 !py-3 text-sm">Search</Button>
