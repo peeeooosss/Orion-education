@@ -20,9 +20,9 @@ const columns = [
   {
     title: "Company",
     links: [
-      { label: "About", href: "#why-orion" },
-      { label: "Counsellors", href: "#why-orion" },
-      { label: "Contact", href: "/scholarship" },
+      { label: "About Us", href: "/about" },
+      { label: "Achievements", href: "/achievements" },
+      { label: "Gallery", href: "/gallery" },
     ],
   },
 ];

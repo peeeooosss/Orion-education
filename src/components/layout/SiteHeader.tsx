@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, ChevronDown, GraduationCap, LogOut, User, Headset, ShieldCheck } from "lucide-react";
+import { Menu, X, ChevronDown, GraduationCap, LogOut, User, Headset, ShieldCheck, Trophy, Images, Info } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
@@ -11,10 +12,15 @@ import { GlobalEnquiryModal } from "@/components/homepage/GlobalEnquiryModal";
 import { useRouter } from "next/navigation";
 
 const navLinks = [
-  { label: "Colleges", href: "#colleges" },
+  { label: "Colleges", href: "/#colleges" },
   { label: "How it works", href: "/journey" },
   { label: "Scholarships", href: "/scholarship" },
-  { label: "Fees & Placements", href: "#colleges" },
+];
+
+const aboutLinks = [
+  { label: "About Us", href: "/about", desc: "Our story & mission", icon: Info },
+  { label: "Achievements", href: "/achievements", desc: "Milestones & success stories", icon: Trophy },
+  { label: "Gallery", href: "/gallery", desc: "Events & campus visits", icon: Images },
 ];
 
 const PORTAL_LINKS: Record<string, { href: string; label: string; icon: typeof GraduationCap; links: { label: string; href: string }[] }> = {
@@ -70,6 +76,7 @@ export function Logo() {
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const authUser = useAppStore((s) => s.authUser);
@@ -95,10 +102,33 @@ export function SiteHeader() {
 
         <div className="hidden lg:flex lg:items-center lg:gap-8">
           {navLinks.map((link) => (
-            <a key={link.label} href={link.href} className="text-sm font-medium text-surface-600 transition-colors hover:text-gold-600">
+            <Link key={link.label} href={link.href} className="text-sm font-medium text-surface-600 transition-colors hover:text-gold-600">
               {link.label}
-            </a>
+            </Link>
           ))}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 text-sm font-medium text-surface-600 transition-colors hover:text-gold-600 focus:outline-none">
+                About Us
+                <ChevronDown className="h-4 w-4 text-surface-400" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64 rounded-2xl p-2">
+              {aboutLinks.map((link) => (
+                <DropdownMenuItem key={link.href} asChild>
+                  <Link href={link.href} className="flex cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-50 text-gold-700">
+                      <link.icon className="h-4 w-4" strokeWidth={1.75} />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-semibold text-surface-900">{link.label}</span>
+                      <span className="block text-xs text-surface-500">{link.desc}</span>
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-center gap-3">
@@ -162,10 +192,40 @@ export function SiteHeader() {
             Enquiry Now
           </button>
           {navLinks.map((link) => (
-            <a key={link.label} href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">
+            <Link key={link.label} href={link.href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">
               {link.label}
-            </a>
+            </Link>
           ))}
+          <div>
+            <button
+              onClick={() => setAboutOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100"
+              aria-expanded={aboutOpen}
+            >
+              About Us
+              <ChevronDown className={cn("h-4 w-4 text-surface-400 transition-transform", aboutOpen && "rotate-180")} />
+            </button>
+            {aboutOpen && (
+              <div className="mt-1 space-y-1 pl-3">
+                {aboutLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => { setOpen(false); setAboutOpen(false); }}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-surface-700 hover:bg-gold-50"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-50 text-gold-700">
+                      <link.icon className="h-4 w-4" strokeWidth={1.75} />
+                    </span>
+                    <span>
+                      <span className="block leading-tight">{link.label}</span>
+                      <span className="block text-xs font-normal text-surface-500">{link.desc}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           {authUser ? (
             <>
               <Link href={portal?.href || "/student/dashboard"} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">{portal?.label || "Portal"}</Link>
