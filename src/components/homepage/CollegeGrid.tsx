@@ -122,12 +122,12 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
     <section id="colleges" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <Badge variant="gold" className="bg-gold-100 text-gold-700">MBA &amp; PGDM Finder</Badge>
+          <Badge variant="gold" className="bg-gold-100 text-gold-700">Explore Programs</Badge>
           <h2 className="mt-3 font-display text-3xl font-bold text-surface-900 sm:text-4xl">
-            Explore {MBA_PGDM_COLLEGES.length} management colleges
+            Explore your dream college
           </h2>
           <p className="mt-2 max-w-xl text-surface-600">
-            Compare MBA and PGDM fees by region. Blue cards are Orion partner colleges with scholarship support.
+            Compare fees, placements and scholarships across Bachelors, Masters, MBA &amp; PGDM. Blue cards are Orion partner colleges with scholarship support.
           </p>
         </div>
       </div>
@@ -140,7 +140,7 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
               !stream ? "bg-brand-950 text-gold-500 shadow-md shadow-gold-500/30" : "bg-surface-50 text-surface-600 hover:bg-surface-100"
             }`}
           >
-            All MBA &amp; PGDM
+            All Programs
           </button>
           <button
             onClick={() => onStream(stream === "MBA" ? null : "MBA")}
@@ -173,7 +173,7 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
       {sorted.length === 0 ? (
         <div className="mt-10 rounded-3xl border border-dashed border-surface-300 bg-surface-50 p-14 text-center">
           <Building2 className="mx-auto h-10 w-10 text-surface-300" />
-          <p className="mt-3 text-sm font-medium text-surface-600">No MBA or PGDM colleges match your filters.</p>
+          <p className="mt-3 text-sm font-medium text-surface-600">No colleges match your filters.</p>
           {hasFilters && <button onClick={resetFilters} className="mt-3 text-sm font-semibold text-gold-700 hover:underline">Clear all filters →</button>}
         </div>
       ) : (

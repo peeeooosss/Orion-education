@@ -103,7 +103,7 @@ export function ScholarshipUnlockChecker() {
         <div>
           <Badge variant="gold" className="bg-gold-100 text-gold-700">Scholarship match ready</Badge>
           <h3 className="mt-3 font-display text-2xl font-bold text-surface-900">Pick your #1 college</h3>
-           <p className="mt-2 text-sm text-surface-600">Your scholarship is valid for MBA and PGDM programs at <b>all Orion partner colleges</b>. Choose your top choice below — this helps our counsellors prioritize the right application for you.</p>
+           <p className="mt-2 text-sm text-surface-600">Your scholarship is valid for MBA and PGDM programs at <b>all Orion partner colleges</b> (Bachelors, Masters &amp; PhD programs are also listed but scholarships currently apply to MBA/PGDM only). Choose your top choice below.</p>
         </div>
 
         <div className="space-y-2 rounded-2xl bg-gold-50/50 p-4">
@@ -187,7 +187,7 @@ export function ScholarshipUnlockChecker() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gradient"><IndianRupee className="h-8 w-8 text-gold-500" /></div>
         <div>
           <h3 className="font-display text-2xl font-bold text-surface-900">Confirm scholarship unlock</h3>
-         <p className="mt-2 text-sm text-surface-600">Pay ₹99 to unlock your assured MBA/PGDM scholarship at all Orion partner colleges.</p>
+           <p className="mt-2 text-sm text-surface-600">Pay ₹99 to unlock your assured MBA/PGDM scholarship at all Orion partner colleges. Bachelors, Masters &amp; PhD programs are also listed but scholarships apply to MBA/PGDM only.</p>
         </div>
         {selectedPrimary && (
           <div className="rounded-2xl bg-gold-50/60 border border-gold-200 p-4 text-sm">
@@ -215,7 +215,7 @@ export function ScholarshipUnlockChecker() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100"><Check className="h-8 w-8 text-green-600" /></div>
         <div>
           <h3 className="font-display text-2xl font-bold text-surface-900">Payment successful!</h3>
-         <p className="mt-2 text-sm text-surface-600">Your assured MBA/PGDM scholarship is <b>unlocked at all Orion partner colleges</b>.</p>
+         <p className="mt-2 text-sm text-surface-600">Your assured MBA/PGDM scholarship is <b>unlocked at all Orion partner colleges</b>. Bachelors, Masters &amp; PhD programs are also available on the platform.</p>
         </div>
 
         <div className="rounded-2xl bg-brand-950 p-5 text-white text-left">

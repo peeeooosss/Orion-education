@@ -28,7 +28,8 @@ function ScholarshipPageContent() {
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-surface-300/70">
               Unlock an eligibility-backed scholarship of up to ₹30,000 for MBA and PGDM programs
-              at Orion partner colleges.
+              at Orion partner colleges. Bachelors, Masters &amp; PhD colleges are also listed on
+              our platform — scholarships currently apply to MBA/PGDM only.
             </p>
           </div>
         </div>
@@ -39,7 +40,7 @@ function ScholarshipPageContent() {
           <section className="mt-14">
             <h2 className="font-display text-2xl font-bold text-surface-900">Which colleges offer scholarships?</h2>
             <p className="mt-1 text-sm text-surface-600">
-              Scholarship availability is limited to the blue-highlighted Orion partner colleges and their MBA/PGDM programs.
+              Scholarship availability is limited to the blue-highlighted Orion partner colleges and their MBA/PGDM programs. Bachelors, Masters &amp; PhD colleges are listed for exploration.
             </p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {colleges.map((college) => {

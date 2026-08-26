@@ -14,12 +14,12 @@ const HERO_POSTER = "/images/hero/slide1.jpg";
 
 const HERO_SLIDES = [
   {
-    title: "Assured MBA & PGDM scholarships up to ₹30,000",
-    body: "Eligibility-backed at Orion partner colleges — no lottery, no paperwork.",
+    title: "Explore colleges across Bachelors, Masters & PhD",
+    body: "Verified facts, real placements and transparent fees — everything you need to decide with confidence.",
   },
   {
-    title: "Verified fees, placements & ratings",
-    body: "The same data counsellors use — real placement numbers, side by side.",
+    title: "Scholarships up to ₹30,000 on MBA & PGDM",
+    body: "At Orion partner colleges — eligibility-backed, no lottery, no paperwork.",
   },
   {
     title: "One enquiry, a counsellor on call",
@@ -104,7 +104,7 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
             <Input
               value={search}
               onChange={(e) => onSearch(e.target.value)}
-              placeholder="Search by college, stream or city..."
+              placeholder="Search by college, program or city..."
               className="h-12 border-0 bg-transparent text-surface-900 placeholder:text-surface-400 focus-visible:ring-0"
               aria-label="Search colleges"
             />
@@ -115,9 +115,9 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
 
           <div className="mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-2">
             <span className="flex items-center gap-1 text-xs font-medium text-white/80 drop-shadow-[0_1px_6px_rgba(0,0,0,0.4)]">
-              <SlidersHorizontal className="h-3.5 w-3.5" /> Popular streams:
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Program levels:
             </span>
-            {STREAM_OPTIONS.filter((opt) => opt.value === "MBA").map((opt) => (
+            {STREAM_OPTIONS.filter((opt) => ["Engineering", "MBA", "Commerce"].includes(opt.value)).map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => pickStream(opt.value)}
@@ -136,7 +136,7 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {[
               { value: String(PARTNER_COLLEGE_COUNT), label: "partner colleges" },
-              { value: "40+", label: "undergrad programs" },
+              { value: "All", label: "programs: Bachelors, Masters, PhD" },
               { value: "₹16L", label: "avg best package" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">

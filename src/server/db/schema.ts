@@ -352,3 +352,15 @@ export const websiteLeads = pgTable("website_leads", {
   userId: text("user_id").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ─── Gallery Photos ──────────────────────────────────────
+export const galleryPhotos = pgTable("gallery_photos", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  category: text("category").notNull(),
+  imageUrl: text("image_url").notNull(),
+  dateLabel: text("date_label"),
+  sortOrder: integer("sort_order").default(0),
+  published: boolean("published").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

@@ -208,7 +208,7 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
               <div className="space-y-2">
                 <Label className="text-surface-800">Program type</Label>
                 <div className="flex flex-wrap gap-2">
-                  {STREAM_OPTIONS.filter((opt) => opt.value === "MBA").map((opt) => (
+                  {STREAM_OPTIONS.filter((opt) => ["Engineering", "MBA", "Commerce"].includes(opt.value)).map((opt) => (
                     <button
                       key={opt.value}
                       type="button"

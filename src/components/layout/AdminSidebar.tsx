@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, MousePointerClick, Building2, LogOut } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, MousePointerClick, Building2, LogOut, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,7 @@ const navItems = [
   { title: "Payments", href: "/admin/payments", icon: IndianRupee, section: null },
   { title: "Website Leads", href: "/admin/website-leads", icon: MousePointerClick, section: null },
   { title: "Applications Pipeline", href: "/admin/dashboard?section=applications", icon: FileStack, section: "applications" },
+  { title: "Gallery", href: "/admin/gallery", icon: Images, section: null },
 ];
 
 interface AdminSidebarProps {

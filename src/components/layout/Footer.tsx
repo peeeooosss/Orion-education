@@ -44,7 +44,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-3 max-w-xs text-sm text-surface-300">
-              Find, compare and get admitted with confidence — MBA and PGDM scholarships up to ₹30,000 at partner colleges.
+              Find, compare and get admitted with confidence — Bachelors, Masters, MBA &amp; PGDM colleges with scholarships up to ₹30,000 at partner colleges.
             </p>
           </div>
 

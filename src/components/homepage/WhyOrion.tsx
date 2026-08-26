@@ -14,8 +14,8 @@ const features = [
   },
   {
     icon: BadgePercent,
-    title: "MBA & PGDM scholarships up to ₹30,000",
-    body: "An eligibility-backed scholarship at any partner college, unlocked in 30 seconds — no paperwork, no lottery.",
+    title: "Scholarships up to ₹30,000 on MBA & PGDM",
+    body: "An eligibility-backed scholarship at any partner college, unlocked in 30 seconds — for MBA & PGDM programs only.",
   },
   {
     icon: PhoneCall,
