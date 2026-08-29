@@ -106,7 +106,7 @@ export function AdminSidebar({ open, onToggle }: AdminSidebarProps) {
             </div>
           )}
           <button
-            onClick={async () => { await signOut(); router.push("/auth/sign-in"); }}
+            onClick={async () => { await signOut(); router.push("/auth/sign-in/admin"); }}
             className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-red-500/20 hover:text-red-400", !open && "mt-2")}
             title="Sign out"
           >

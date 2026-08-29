@@ -350,6 +350,7 @@ export const websiteLeads = pgTable("website_leads", {
   admissionTimeline: text("admission_timeline"),
   sourceWebsite: text("source_website"),
   userId: text("user_id").references(() => users.id),
+  source: text("source").default("website-visit"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

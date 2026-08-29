@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 
 const navLinks = [
   { label: "Colleges", href: "/#colleges" },
+  { label: "Study Abroad", href: "/study-abroad" },
   { label: "How it works", href: "/journey" },
   { label: "Scholarships", href: "/scholarship" },
 ];
@@ -94,6 +95,7 @@ export function SiteHeader() {
 
   const portal = authUser ? PORTAL_LINKS[authUser.role] || PORTAL_LINKS.student : null;
   const PortalIcon = portal?.icon || GraduationCap;
+  const signInHref = authUser ? `/auth/sign-in/${authUser.role}` : "/auth/sign-in";
 
   return (
     <header className="sticky top-0 z-40 border-b border-surface-200 bg-white/80 backdrop-blur-md">
@@ -168,7 +170,7 @@ export function SiteHeader() {
                   <Link href="/auth/sign-in" onClick={async () => { await signOut(); setMenuOpen(false); }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-surface-700 hover:bg-surface-100">
                     <User className="h-4 w-4 text-surface-400" /> Switch account
                   </Link>
-                  <button onClick={async () => { await signOut(); setMenuOpen(false); router.push("/auth/sign-in"); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4" /> Sign Out</button>
+                  <button onClick={async () => { await signOut(); setMenuOpen(false); router.push(signInHref); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4" /> Sign Out</button>
                 </div>
               )}
             </div>
@@ -230,7 +232,7 @@ export function SiteHeader() {
             <>
               <Link href={portal?.href || "/student/dashboard"} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">{portal?.label || "Portal"}</Link>
               <Link href="/auth/sign-in" onClick={async () => { await signOut(); setOpen(false); }} className="block rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-100">Switch account</Link>
-              <button onClick={async () => { await signOut(); setOpen(false); router.push("/auth/sign-in"); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50">Sign Out</button>
+              <button onClick={async () => { await signOut(); setOpen(false); router.push(signInHref); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50">Sign Out</button>
             </>
           ) : (
             <>

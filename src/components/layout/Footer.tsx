@@ -5,6 +5,7 @@ const columns = [
     title: "Explore",
     links: [
       { label: "Top Colleges", href: "#colleges" },
+      { label: "Study Abroad", href: "/study-abroad" },
       { label: "Student Journey", href: "/journey" },
       { label: "Scholarships", href: "/scholarship" },
     ],

@@ -14,24 +14,25 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "50"), 200);
   const offset = Math.max(parseInt(searchParams.get("offset") ?? "0"), 0);
+  const source = searchParams.get("source") ?? "all";
 
-  const rows = await db
-    .select()
-    .from(websiteLeads)
-    .orderBy(websiteLeads.createdAt)
-    .limit(limit)
-    .offset(offset);
+  const base = db.select().from(websiteLeads);
+  const rows =
+    source === "all"
+      ? await base.orderBy(websiteLeads.createdAt).limit(limit).offset(offset)
+      : await base.where(eq(websiteLeads.source, source)).orderBy(websiteLeads.createdAt).limit(limit).offset(offset);
 
-  const [{ value: total }] = await db
-    .select({ value: sql<number>`count(*)::int` })
-    .from(websiteLeads);
+  const [{ value: total }] =
+    source === "all"
+      ? await db.select({ value: sql<number>`count(*)::int` }).from(websiteLeads)
+      : await db.select({ value: sql<number>`count(*)::int` }).from(websiteLeads).where(eq(websiteLeads.source, source));
 
   return NextResponse.json({ leads: rows, count: rows.length, total });
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, phone, email, collegeId, collegeName, program, admissionTimeline, sourceWebsite } = body;
+  const { name, phone, email, collegeId, collegeName, program, admissionTimeline, sourceWebsite, source, country, level, field } = body;
 
   if (!name || name.trim().length < 2) {
     return NextResponse.json({ error: "Valid name is required" }, { status: 400 });
@@ -39,7 +40,10 @@ export async function POST(req: NextRequest) {
   if (!phone || phone.trim().length < 10) {
     return NextResponse.json({ error: "Valid phone number is required" }, { status: 400 });
   }
-  if (!collegeId || !collegeName) {
+
+  const effectiveSource = source ?? "website-visit";
+  // For study-abroad leads, college is optional (could be "Others")
+  if (effectiveSource !== "study-abroad" && (!collegeId || !collegeName)) {
     return NextResponse.json({ error: "College is required" }, { status: 400 });
   }
 
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest) {
   // college_id carries an FK to the colleges table; Orion directory ids are not in
   // that table, so only keep the id when it resolves — college_name preserves the rest.
   let resolvedCollegeId: string | null = null;
-  if (collegeId) {
+  if (collegeId && collegeId !== "__others__") {
     const match = await db
       .select({ id: colleges.id })
       .from(colleges)
@@ -69,11 +73,12 @@ export async function POST(req: NextRequest) {
     phone: phone.trim(),
     email: email?.trim() || null,
     collegeId: resolvedCollegeId,
-    collegeName: collegeName || null,
-    program: program || null,
+    collegeName: collegeName?.trim() || null,
+    program: program?.trim() || null,
     admissionTimeline: admissionTimeline || null,
     sourceWebsite: sourceWebsite || null,
     userId: userId || null,
+    source: effectiveSource,
   }).returning();
 
   return NextResponse.json({ lead: record[0] });

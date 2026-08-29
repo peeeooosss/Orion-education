@@ -43,7 +43,7 @@ export function AgentHeader({
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-error" />
           </button>
           <button
-            onClick={async () => { await signOut(); router.push("/auth/sign-in"); }}
+            onClick={async () => { await signOut(); router.push("/auth/sign-in/agent"); }}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
             aria-label="Sign out"
           >
