@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database, LogOut } from "lucide-react";
+import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database, Globe2, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ const leadNavItems = [
 
 const knowledgeNavItems = [
   { title: "Imported Students", href: "/agent/raw-data", icon: Database },
+  { title: "Website Leads", href: "/agent/website-leads", icon: Globe2 },
   { title: "Applications", href: "/agent/applications", icon: FileStack },
   { title: "University Directory", href: "/agent/universities", icon: Building2 },
   { title: "Program List", href: "/agent/programs", icon: BookOpen },

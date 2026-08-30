@@ -42,6 +42,7 @@ import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
 function leadTypeFromSource(source: Lead["source"]): LeadType {
   if (source === "Scholarship Checker") return "scholarship";
   if (source === "Imported Raw Data") return "raw";
+  if (source === "Website Visit" || source === "Study Abroad") return "website";
   return "enquiry";
 }
 

@@ -351,6 +351,9 @@ export const websiteLeads = pgTable("website_leads", {
   sourceWebsite: text("source_website"),
   userId: text("user_id").references(() => users.id),
   source: text("source").default("website-visit"),
+  assignedAgent: text("assigned_agent"),
+  leadId: text("lead_id"),
+  status: text("status").default("Unassigned"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

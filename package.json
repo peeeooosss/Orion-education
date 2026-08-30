@@ -12,7 +12,8 @@
     "seed": "npx tsx scripts/seed-db.ts",
     "sync:colleges": "npx tsx scripts/sync-college-directory.ts",
     "bootstrap:admin": "npx tsx scripts/bootstrap-admin.ts",
-    "migrate:leads-source": "npx tsx scripts/migrate-website-leads-source.ts"
+    "migrate:leads-source": "npx tsx scripts/migrate-website-leads-source.ts",
+    "migrate:leads-assign": "npx tsx scripts/migrate-website-leads-assign.ts"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

@@ -2,8 +2,8 @@ import type { IntentLevel, LeadStatus, ScoreBand, Stream } from "@/lib/scholarsh
 
 export type { IntentLevel, LeadStatus };
 
-export type LeadSource = "Scholarship Checker" | "College Enquiry" | "Imported Raw Data";
-export type LeadType = "scholarship" | "enquiry" | "raw";
+export type LeadSource = "Scholarship Checker" | "College Enquiry" | "Imported Raw Data" | "Website Visit" | "Study Abroad";
+export type LeadType = "scholarship" | "enquiry" | "raw" | "website";
 export type CallStatus = "Not Called" | "Call Started" | "Connected" | "No Answer" | "Busy" | "Call Back Requested" | "WhatsApp Sent" | "Wrong Number" | "Do Not Call";
 export type InterestStatus = "Not Assessed" | "Interested" | "Needs More Details" | "Parent Discussion" | "Fee Concern" | "Scholarship Focused" | "Placement Focused" | "Exam Result Pending" | "Not Interested" | "Qualified";
 export type NextAction = "Call Again" | "Send College Details" | "Send Fee Structure" | "Send Scholarship Details" | "Send Placement Details" | "Send WhatsApp Comparison" | "Talk to Parent" | "Book Counselling" | "Follow Up After Exam Result" | "Start Application" | "Close Record";

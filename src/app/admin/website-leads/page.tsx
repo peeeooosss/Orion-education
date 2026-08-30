@@ -20,18 +20,22 @@ interface WebsiteLead {
   sourceWebsite: string | null;
   userId: string | null;
   source: string | null;
+  assignedAgent: string | null;
+  leadId: string | null;
+  status: string | null;
   createdAt: string;
+}
+
+interface AgentOption {
+  id: string;
+  name: string;
 }
 
 type SourceFilter = "all" | "website-visit" | "study-abroad";
 
-const SOURCE_LABEL: Record<string, string> = {
-  "website-visit": "Website",
-  "study-abroad": "Abroad",
-};
-
 export default function AdminWebsiteLeadsPage() {
   const [leads, setLeads] = React.useState<WebsiteLead[]>([]);
+  const [agents, setAgents] = React.useState<AgentOption[]>([]);
   const [count, setCount] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
@@ -53,9 +57,42 @@ export default function AdminWebsiteLeadsPage() {
     }
   }
 
+  async function loadAgents() {
+    try {
+      const res = await fetch("/api/admin/agents");
+      if (res.ok) {
+        const data = await res.json();
+        setAgents((data.agents ?? []).map((a: AgentOption) => ({ id: a.id, name: a.name })));
+      }
+    } catch {
+      // silent
+    }
+  }
+
+  async function assignLead(lead: WebsiteLead, agentId: string) {
+    if (!agentId) return;
+    try {
+      setError("");
+      const res = await fetch(`/api/admin/website-leads/${lead.id}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to assign");
+      }
+      await loadLeads();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to assign");
+    }
+  }
+
   // Load the server-backed list once when the admin view mounts.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  React.useEffect(() => { loadLeads(); }, []);
+  React.useEffect(() => { loadLeads(); loadAgents(); }, []);
+
+  const agentName = (id: string | null) => id ? agents.find((a) => a.id === id)?.name ?? id : "";
 
   function switchFilter(next: SourceFilter) {
     setFilter(next);
@@ -152,7 +189,7 @@ export default function AdminWebsiteLeadsPage() {
               </p>
             </div>
           ) : (
-            <table className="w-full min-w-[820px]">
+            <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                   <th className="p-3">Student</th>
@@ -160,7 +197,8 @@ export default function AdminWebsiteLeadsPage() {
                   <th className="p-3">College</th>
                   <th className="p-3">Program</th>
                   <th className="p-3">Admission timeline</th>
-                  <th className="p-3">Captured</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -185,7 +223,28 @@ export default function AdminWebsiteLeadsPage() {
                     <td className="p-3">
                       <Badge className="bg-blue-100 text-blue-700">{lead.admissionTimeline ?? "—"}</Badge>
                     </td>
-                    <td className="p-3 text-xs text-slate-500">{timeAgo(lead.createdAt)}</td>
+                    <td className="p-3">
+                      {lead.status === "Assigned" ? (
+                        <Badge className="bg-green-100 text-green-700">
+                          {agentName(lead.assignedAgent) || "Assigned"} ·
+                          <span className="ml-1">{timeAgo(lead.createdAt)}</span>
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-surface-100 text-slate-600">Unassigned</Badge>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <select
+                        value={lead.assignedAgent ?? ""}
+                        onChange={(e) => assignLead(lead, e.target.value)}
+                        className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-gold-500"
+                      >
+                        <option value="">{lead.status === "Assigned" ? "Reassign…" : "Send to agent…"}</option>
+                        {agents.map((a) => (
+                          <option key={a.id} value={a.id}>{a.name}</option>
+                        ))}
+                      </select>
+                    </td>
                   </tr>
                 ))}
               </tbody>

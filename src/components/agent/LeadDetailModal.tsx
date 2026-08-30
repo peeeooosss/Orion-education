@@ -44,6 +44,7 @@ const leadTypeBadge: Record<string, { label: string; cls: string }> = {
   scholarship: { label: "Scholarship", cls: "bg-gold-100 text-gold-700" },
   enquiry: { label: "Enquiry only", cls: "bg-blue-100 text-blue-700" },
   raw: { label: "Raw cold-call", cls: "bg-slate-200 text-slate-700" },
+  website: { label: "Website", cls: "bg-teal-100 text-teal-700" },
 };
 
 export function LeadDetailModal({

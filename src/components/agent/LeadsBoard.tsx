@@ -43,12 +43,14 @@ const leadTypeMeta: Record<LeadType, { label: string; badge: string }> = {
   scholarship: { label: "Scholarship", badge: "bg-gold-100 text-gold-700" },
   enquiry: { label: "Enquiry", badge: "bg-blue-100 text-blue-700" },
   raw: { label: "Raw cold-call", badge: "bg-slate-200 text-slate-700" },
+  website: { label: "Website", badge: "bg-teal-100 text-teal-700" },
 };
 
 const TYPE_FILTERS: { key: "all" | LeadType; label: string }[] = [
   { key: "all", label: "All" },
   { key: "scholarship", label: "Scholarship" },
   { key: "enquiry", label: "Enquiry only" },
+  { key: "website", label: "Website" },
   { key: "raw", label: "Raw cold-call" },
 ];
 
