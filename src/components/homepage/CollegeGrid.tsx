@@ -8,8 +8,9 @@ import { SmartEnquiryModal, type EnquiryCollege } from "@/components/college/Sma
 import { MBA_PGDM_COLLEGES, canReceiveOrionScholarship, COLLEGE_REGIONS, type CollegeDirectoryEntry } from "@/data/college-directory";
 import { getPartnerProfile } from "@/data/partner-profiles";
 import { CollegeLogo } from "@/components/college/CollegeLogo";
-import type { Stream } from "@/lib/scholarship";
+import { inferStreamFromProgramName, STREAM_OPTIONS, type Stream } from "@/lib/scholarship";
 import { inferRegion } from "@/lib/region";
+import { useEnquiryStore } from "@/store/useEnquiryStore";
 
 export type SortKey = "default" | "fee-asc" | "fee-desc" | "rating" | "placement";
 
@@ -37,7 +38,7 @@ function toEnquiryCollege(college: CollegeDirectoryEntry): EnquiryCollege {
   return {
     id: college.id,
     shortName: college.name,
-    programs: college.courses.map((course) => ({ name: course.name, stream: "MBA" })),
+    programs: college.courses.map((course) => ({ name: course.name, stream: course.stream ?? inferStreamFromProgramName(course.name) })),
   };
 }
 
@@ -111,6 +112,7 @@ function dbCollegeToEntry(c: DbCollegRow): CollegeDirectoryEntry {
     courses: (c.programs || []).map((p) => ({
       name: p.name,
       fees: dbFeeDisplay(p.totalFee || p.annualFee),
+      stream: (p.stream as Stream) ?? inferStreamFromProgramName(p.name),
     })),
     isPartnered: Boolean(c.partnerCollege),
     scholarshipAvailable: Boolean(c.partnerCollege),
@@ -124,6 +126,7 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
   const [showAll, setShowAll] = useState(false);
   const [dbMap, setDbMap] = useState<Record<string, DbCardOverlay>>({});
   const [dbOnlyColleges, setDbOnlyColleges] = useState<CollegeDirectoryEntry[]>([]);
+  const openEnquiry = useEnquiryStore((s) => s.openModal);
 
   // Admin-managed DB values overlay the static directory cards.
   // DB colleges not in the static directory are added as new entries.
@@ -176,7 +179,7 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
       college.location.toLowerCase().includes(q) ||
       college.region.toLowerCase().includes(q) ||
       college.courses.some((course) => course.name.toLowerCase().includes(q));
-    const matchesStream = !stream || stream === "MBA";
+    const matchesStream = !stream || college.courses.some((course) => (course.stream ?? inferStreamFromProgramName(course.name)) === stream);
     const matchesRegion = !city || college.region === city;
     return matchesSearch && matchesStream && matchesRegion;
   });
@@ -222,14 +225,20 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
           >
             All Programs
           </button>
-          <button
-            onClick={() => onStream(stream === "MBA" ? null : "MBA")}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-              stream === "MBA" ? "bg-brand-950 text-gold-500 shadow-md shadow-gold-500/30" : "bg-surface-50 text-surface-600 hover:bg-surface-100"
-            }`}
-          >
-            MBA / PGDM
-          </button>
+          {STREAM_OPTIONS.map((opt) => {
+            const active = stream === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => onStream(active ? null : opt.value)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                  active ? "bg-brand-950 text-gold-500 shadow-md shadow-gold-500/30" : "bg-surface-50 text-surface-600 hover:bg-surface-100"
+                }`}
+              >
+                {opt.emoji} {opt.label}
+              </button>
+            );
+          })}
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <select value={city} onChange={(e) => onCity(e.target.value)} className={selectClass} aria-label="Filter by region">
@@ -251,10 +260,34 @@ export function CollegeGrid({ search, stream, city, sort, onStream, onCity, onSo
       </div>
 
       {sorted.length === 0 ? (
-        <div className="mt-10 rounded-3xl border border-dashed border-surface-300 bg-surface-50 p-14 text-center">
-          <Building2 className="mx-auto h-10 w-10 text-surface-300" />
-          <p className="mt-3 text-sm font-medium text-surface-600">No colleges match your filters.</p>
-          {hasFilters && <button onClick={resetFilters} className="mt-3 text-sm font-semibold text-gold-700 hover:underline">Clear all filters →</button>}
+        <div className="mt-10 rounded-3xl border border-dashed border-surface-300 bg-surface-50 p-12 text-center">
+          {stream ? (
+            <>
+              <p className="text-3xl">{STREAM_OPTIONS.find((o) => o.value === stream)?.emoji}</p>
+              <p className="mt-3 text-base font-semibold text-surface-900">
+                No {STREAM_OPTIONS.find((o) => o.value === stream)?.label} colleges listed yet
+              </p>
+              <p className="mx-auto mt-1 max-w-md text-sm text-surface-600">
+                We're expanding into {STREAM_OPTIONS.find((o) => o.value === stream)?.label} programs. Talk to a counsellor and we'll shortlist the right options for you.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={openEnquiry}
+                  className="inline-flex items-center gap-2 rounded-full bg-brand-gradient px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-950/20 transition-transform hover:scale-105"
+                >
+                  <PhoneCall className="h-4 w-4" /> Talk to a counsellor
+                </button>
+                <button onClick={resetFilters} className="text-sm font-semibold text-gold-700 hover:underline">Clear all filters →</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Building2 className="mx-auto h-10 w-10 text-surface-300" />
+              <p className="mt-3 text-sm font-medium text-surface-600">No colleges match your filters.</p>
+              {hasFilters && <button onClick={resetFilters} className="mt-3 text-sm font-semibold text-gold-700 hover:underline">Clear all filters →</button>}
+            </>
+          )}
         </div>
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

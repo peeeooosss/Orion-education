@@ -121,9 +121,9 @@ export function HeroSection({ search, onSearch, stream, onStream }: HeroSectionP
 
           <div className="mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-2">
             <span className="flex items-center gap-1 text-xs font-medium text-white/80 drop-shadow-[0_1px_6px_rgba(0,0,0,0.4)]">
-              <SlidersHorizontal className="h-3.5 w-3.5" /> Program levels:
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Browse by program:
             </span>
-            {STREAM_OPTIONS.filter((opt) => ["Engineering", "MBA", "Commerce"].includes(opt.value)).map((opt) => (
+            {STREAM_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => pickStream(opt.value)}

@@ -1,7 +1,10 @@
+import type { Stream } from "@/lib/scholarship";
+
 export interface DirectoryCourse {
   name: string;
   specialization?: string;
   fees: string;
+  stream?: Stream;
 }
 
 export interface CollegeDirectoryEntry {

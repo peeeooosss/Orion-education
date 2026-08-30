@@ -6,6 +6,18 @@ export type Stream =
   | "Law"
   | "Medical";
 
+export function inferStreamFromProgramName(name: string): Stream {
+  const n = name.toLowerCase();
+  const has = (...pats: RegExp[]) => pats.some((p) => p.test(n));
+  if (has(/\bmbbs\b/, /\bbds\b/, /\bpharm\b/, /\bpharma\b/, /\bnursing\b/, /\bmedicine\b/, /\bmedical\b/, /\bphysio/)) return "Medical";
+  if (has(/ll\.?b/, /ll\.?m/, /\blaw\b/, /\bjudicial\b/)) return "Law";
+  if (has(/\bb\.des\b/, /\bm\.des\b/, /\bdesign\b/, /\barchitecture\b/, /\bfashion\b/, /\binterior\b/)) return "Design";
+  if (has(/b\.?e\.?/, /b\.?tech\b/, /bachelor of (engineering|technology)/, /\bm\.tech\b/, /\bm\.?e\.?\.?/, /\bengineering\b/, /\baerospace\b/, /\bvls\s*i/) || /\bcomputer science/.test(n) || /\bdata science/.test(n) && !/\bb\.?com\b/.test(n)) return "Engineering";
+  if (has(/\bmba\b/, /\bpgdm\b/, /\bmanagement\b/, /\bbusiness\b/, /\bfinance\b/, /\bmarketing\b/, /\bhr\b/, /\boperations\b/, /\bscm\b/, /\bbfsi\b/)) return "MBA";
+  if (has(/\bb\.?com\b/, /\bm\.?com\b/, /\bcommerce\b/, /\baccounting\b/, /\bca\b/, /\beco\b/, /\bbba\b/)) return "Commerce";
+  return "MBA";
+}
+
 export type ScoreBand = "90+" | "75-90" | "60-75" | "Below 60";
 
 export type IntentLevel = "Hot" | "Warm" | "Cold";
