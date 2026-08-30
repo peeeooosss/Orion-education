@@ -134,7 +134,7 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
               <p className="text-xs text-gold-400">Telecaller · On call</p>
             </div>
             <button
-              onClick={async () => { await signOut(); router.push("/auth/sign-in/agent"); }}
+              onClick={async () => { await signOut(); router.push("/auth/sign-in"); }}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-red-500/20 hover:text-red-400"
               title="Sign out"
             >

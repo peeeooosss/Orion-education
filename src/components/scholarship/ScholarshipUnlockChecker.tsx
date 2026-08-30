@@ -86,7 +86,7 @@ export function ScholarshipUnlockChecker() {
         <h3 className="mt-4 font-display text-xl font-bold text-surface-900">Sign in to check your scholarship</h3>
         <p className="mt-2 text-sm text-surface-600">You need to be signed in to unlock your personalized scholarship eligibility.</p>
         <div className="mt-5 flex justify-center gap-3">
-          <Link href="/auth/sign-in/student?returnTo=/scholarship"><Button variant="gold" className="h-11"><LogIn className="h-4 w-4" /> Sign In</Button></Link>
+          <Link href="/auth/sign-in?returnTo=/scholarship"><Button variant="gold" className="h-11"><LogIn className="h-4 w-4" /> Sign In</Button></Link>
           <Link href="/auth/sign-up/student"><Button variant="outline" className="h-11">Sign Up</Button></Link>
         </div>
       </Card>

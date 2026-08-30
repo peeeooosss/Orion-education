@@ -13,9 +13,9 @@ const columns = [
   {
     title: "Portals",
     links: [
-      { label: "Student Portal", href: "/student/dashboard" },
-      { label: "Agent CRM", href: "/agent/dashboard" },
-      { label: "Admin Overview", href: "/admin/dashboard" },
+      { label: "Student Portal", href: "/auth/sign-in" },
+      { label: "Agent CRM", href: "/auth/sign-in" },
+      { label: "Admin Overview", href: "/auth/sign-in" },
     ],
   },
   {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LogIn, Shield, Headphones, GraduationCap } from "lucide-react";
+import { LogIn, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,39 +21,18 @@ interface Branding {
   icon: React.ReactNode;
 }
 
-const ROLE_BRANDING: Record<string, Branding> = {
-  admin: {
-    title: "Admin Portal",
-    subtitle: "Sign in to the Orion admin dashboard",
-    gradient: "from-indigo-600 to-indigo-800",
-    icon: <Shield className="h-7 w-7 text-white" />,
-  },
-  agent: {
-    title: "Agent Portal",
-    subtitle: "Sign in to your agent dashboard",
-    gradient: "from-emerald-600 to-emerald-800",
-    icon: <Headphones className="h-7 w-7 text-white" />,
-  },
-  student: {
-    title: "Student Portal",
-    subtitle: "Sign in to your Orion account",
-    gradient: "from-brand-600 to-brand-700",
-    icon: <GraduationCap className="h-7 w-7 text-gold-500" />,
-  },
-};
-
-const SIGN_UP_HREF: Record<string, string> = {
-  student: "/auth/sign-up/student",
-  agent: "/auth/sign-in/agent",
-  admin: "/auth/sign-in/admin",
+const NEUTRAL_BRANDING: Branding = {
+  title: "Welcome back",
+  subtitle: "Sign in to your Orion account",
+  gradient: "from-brand-600 to-brand-700",
+  icon: <GraduationCap className="h-7 w-7 text-gold-500" />,
 };
 
 interface RoleLoginFormProps {
-  defaultRole?: "student" | "agent" | "admin";
   branding?: Branding;
 }
 
-export function RoleLoginForm({ defaultRole, branding }: RoleLoginFormProps) {
+export function RoleLoginForm({ branding }: RoleLoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -61,8 +40,7 @@ export function RoleLoginForm({ defaultRole, branding }: RoleLoginFormProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const effectiveRole = defaultRole || "student";
-  const b = branding || ROLE_BRANDING[effectiveRole];
+  const b = branding || NEUTRAL_BRANDING;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -136,18 +114,10 @@ export function RoleLoginForm({ defaultRole, branding }: RoleLoginFormProps) {
       </form>
 
       <div className="mt-4 flex flex-col items-center gap-2 text-center">
-        {effectiveRole === "student" && (
-          <p className="text-sm text-surface-500">
-            Don&apos;t have an account?{" "}
-            <Link href={SIGN_UP_HREF[effectiveRole]} className="font-semibold text-gold-700 hover:underline">Sign Up</Link>
-          </p>
-        )}
-        {effectiveRole !== "student" && (
-          <p className="text-sm text-surface-500">
-            Back to{" "}
-            <Link href="/auth/sign-in/student" className="font-semibold text-gold-700 hover:underline">Student Login</Link>
-          </p>
-        )}
+        <p className="text-sm text-surface-500">
+          Don&apos;t have an account?{" "}
+          <Link href="/auth/sign-up/student" className="font-semibold text-gold-700 hover:underline">Sign Up</Link>
+        </p>
       </div>
     </div>
   );

@@ -69,7 +69,7 @@ export default function StudentSignUpPage() {
           </form>
 
           <div className="mt-4 text-center">
-            <p className="text-sm text-surface-500">Already have an account?{" "}<Link href="/auth/sign-in/student" className="font-semibold text-gold-700 hover:underline">Sign In</Link></p>
+            <p className="text-sm text-surface-500">Already have an account?{" "}<Link href="/auth/sign-in" className="font-semibold text-gold-700 hover:underline">Sign In</Link></p>
           </div>
         </div>
       </main>
