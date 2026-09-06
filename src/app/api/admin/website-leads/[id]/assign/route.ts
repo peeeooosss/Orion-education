@@ -115,5 +115,15 @@ export async function POST(
     leadId: leadId || null,
   }).where(eq(websiteLeads.id, id));
 
+  // If this website lead is already linked to a CRM lead, move it to the new agent
+  if (leadId) {
+    await db.update(leads).set({
+      agentId,
+      assignedAt: new Date(),
+      assignmentNote: `Reassigned by admin to ${agentUser[0].name}`,
+      updatedAt: new Date(),
+    }).where(eq(leads.id, leadId));
+  }
+
   return NextResponse.json({ ok: true, leadId });
 }

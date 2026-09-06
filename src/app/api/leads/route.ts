@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromCookie } from "@/server/auth";
 import { db } from "@/server/db";
-import { leads, contacts, agents, users, colleges, rawStudents, leadActivities, followUps } from "@/server/db/schema";
+import { leads, contacts, agents, users, colleges, rawStudents, leadActivities, followUps, websiteLeads } from "@/server/db/schema";
 import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { computeScholarship, computeIntentLevel } from "@/lib/scholarship";
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
   const start = Date.now();
   try {
     const body = await req.json();
-    const { name, phone, email, source, stream, scoreBand, targetCollege, targetProgram, lookingFor, score, collegeId, admissionTimeline } = body;
+    const { name, phone, email, source, stream, scoreBand, targetCollege, targetProgram, lookingFor, score, collegeId, collegeName: rawCollegeName, admissionTimeline } = body;
 
     if (!name || name.trim().length < 2) {
       return NextResponse.json({ error: "Valid name is required" }, { status: 400 });
@@ -184,9 +184,11 @@ export async function POST(req: NextRequest) {
     const sessionUserId = session?.userId ?? null;
 
     // Determine lead type from source
-    let leadType: "scholarship" | "enquiry" | "raw";
+    let leadType: "scholarship" | "enquiry" | "website" | "raw";
     if (source === "Scholarship Checker") leadType = "scholarship";
     else if (source === "College Enquiry") leadType = "enquiry";
+    else if (source === "Free Enquiry") leadType = "website";
+    else if (source === "Website Visit" || source === "Study Abroad") leadType = "website";
     else leadType = "enquiry";
 
     // Find or create contact by phone (normalize)
@@ -305,6 +307,26 @@ export async function POST(req: NextRequest) {
       assignedAt: now,
       assignmentNote: `Auto-assigned via ${source}`,
     });
+
+    // Create a matching website_leads tracking row for Free Enquiry so it shows
+    // in the Admin & Agent "Website Leads" sections as a Free Enquiry.
+    if (leadType === "website" && source === "Free Enquiry") {
+      await db.insert(websiteLeads).values({
+        id: `wvl-${nanoid(12)}`,
+        name: name.trim(),
+        phone: phoneNorm,
+        email: email?.trim() || null,
+        collegeId: collegeId || null,
+        collegeName: rawCollegeName?.trim() || targetDisplay || null,
+        program: targetProgram?.trim() || null,
+        admissionTimeline: admissionTimeline || null,
+        userId: sessionUserId,
+        source: "free-enquiry",
+        assignedAgent: assignedAgent.id,
+        leadId,
+        status: assignedAgent.id ? "Assigned" : "Unassigned",
+      }).onConflictDoNothing();
+    }
 
     // Increment agent's leadsAssigned
     if (assignedAgent.id) {

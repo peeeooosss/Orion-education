@@ -31,7 +31,7 @@ interface AgentOption {
   name: string;
 }
 
-type SourceFilter = "all" | "website-visit" | "study-abroad";
+type SourceFilter = "all" | "free-enquiry" | "website-visit" | "study-abroad";
 
 export default function AdminWebsiteLeadsPage() {
   const [leads, setLeads] = React.useState<WebsiteLead[]>([]);
@@ -108,7 +108,7 @@ export default function AdminWebsiteLeadsPage() {
         <div>
           <h1 className="text-2xl font-bold text-brand-950">Website Leads</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Students who enquired on the website — college visits and study-abroad forms.
+            Students who enquired on the website — free enquiries, college visits and study-abroad forms.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => loadLeads()} disabled={loading}>
@@ -118,7 +118,7 @@ export default function AdminWebsiteLeadsPage() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {(["all", "website-visit", "study-abroad"] as SourceFilter[]).map((f) => (
+        {(["all", "free-enquiry", "website-visit", "study-abroad"] as SourceFilter[]).map((f) => (
           <button
             key={f}
             onClick={() => switchFilter(f)}
@@ -128,6 +128,7 @@ export default function AdminWebsiteLeadsPage() {
             )}
           >
             {f === "all" && "All"}
+            {f === "free-enquiry" && "Free Enquiry"}
             {f === "website-visit" && "College Visits"}
             {f === "study-abroad" && "Study Abroad"}
           </button>
@@ -149,7 +150,7 @@ export default function AdminWebsiteLeadsPage() {
             </div>
             <div>
               <p className="font-heading text-xl font-bold text-brand-950">{count}</p>
-              <p className="text-xs text-slate-500">{filter === "study-abroad" ? "Study abroad enquiries" : filter === "website-visit" ? "Website visit leads" : "Total leads captured"}</p>
+              <p className="text-xs text-slate-500">{filter === "study-abroad" ? "Study abroad enquiries" : filter === "free-enquiry" ? "Free enquiry leads" : filter === "website-visit" ? "Website visit leads" : "Total leads captured"}</p>
             </div>
           </CardContent>
         </Card>
@@ -214,6 +215,8 @@ export default function AdminWebsiteLeadsPage() {
                         <Badge className="bg-indigo-100 text-indigo-700">
                           <Plane className="h-3 w-3 mr-1" /> Abroad
                         </Badge>
+                      ) : lead.source === "free-enquiry" ? (
+                        <Badge className="bg-gold-100 text-gold-700">Free Enquiry</Badge>
                       ) : (
                         <Badge className="bg-surface-100 text-slate-600">Website</Badge>
                       )}

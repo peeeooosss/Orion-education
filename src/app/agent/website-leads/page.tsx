@@ -85,20 +85,20 @@ export default function AgentWebsiteLeadsPage() {
 
   const assigned = leads.length;
   const called = leads.filter((l) => l.callConnected).length;
-  const abroad = leads.filter((l) => l.source === "Study Abroad").length;
+  const freeEnquiry = leads.filter((l) => l.source === "Free Enquiry").length;
   const pending = leads.filter((l) => l.callStatus === "Not Called").length;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-brand-950">Website Leads</h1>
-        <p className="mt-1 text-sm text-slate-600">Website visits and study-abroad enquiries sent to you by admin. Same controls as New Leads — call, update status, set follow-ups.</p>
+        <p className="mt-1 text-sm text-slate-600">Free enquiries and study-abroad leads sent to you. Same controls as New Leads — call, update status, set follow-ups.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
           { label: "Assigned to you", value: assigned, icon: Globe2, color: "bg-blue-100 text-blue-700" },
-          { label: "Study abroad", value: abroad, icon: CheckCircle2, color: "bg-indigo-100 text-indigo-700" },
+          { label: "Free Enquiry", value: freeEnquiry, icon: Sparkles, color: "bg-gold-100 text-gold-700" },
           { label: "Pending calls", value: pending, icon: PhoneCall, color: "bg-amber-100 text-amber-700" },
         ].map((m) => (
           <Card key={m.label} className="border-slate-200 bg-white shadow-sm">
@@ -150,6 +150,8 @@ export default function AgentWebsiteLeadsPage() {
                   <td className="p-3.5">
                     {lead.source === "Study Abroad" ? (
                       <Badge className="bg-indigo-100 text-indigo-700">Study Abroad</Badge>
+                    ) : lead.source === "Free Enquiry" ? (
+                      <Badge className="bg-gold-100 text-gold-700">Free Enquiry</Badge>
                     ) : (
                       <Badge className="bg-slate-200 text-slate-700">Website Visit</Badge>
                     )}
