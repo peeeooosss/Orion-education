@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { rawStudents, rawImportBatches, users } from "@/server/db/schema";
 import { eq, desc, and, ilike } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { createLead, findOrCreateContact } from "@/lib/leads";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookie();
@@ -116,7 +117,46 @@ export async function POST(req: NextRequest) {
     }));
 
     for (const vals of insertValues) {
-      await db.insert(rawStudents).values(vals);
+      const inserted = await db.insert(rawStudents).values(vals).returning();
+
+      // Create a canonical, unassigned CRM lead for every imported student.
+      // Admin assigns these to agents from the Admin panel.
+      if (inserted[0]) {
+        const rawRec = inserted[0];
+        const contactId = await findOrCreateContact({
+          name: rawRec.studentName || "Unnamed student",
+          phone: rawRec.phone || "",
+          email: rawRec.email,
+          city: rawRec.city,
+          state: rawRec.state,
+        });
+
+        await createLead({
+          contactId,
+          source: "Imported Raw Data",
+          leadType: "raw",
+          leadCategory: "imported",
+          agentId: null,
+          assignedBy: null,
+          assignmentNote: `Imported from ${fileName}. Awaiting admin assignment.`,
+          lookingFor: rawRec.preferredProgram || "Admission counselling",
+          targetCollege: rawRec.preferredCollege || "College to be confirmed",
+          targetProgram: rawRec.preferredProgram,
+          admissionTimeline: rawRec.admissionTimeline,
+          scoreBand: rawRec.scoreBand || undefined,
+          stream: rawRec.stream || undefined,
+          rawStudentId: rawRec.id,
+          questionnaire: {
+            city: rawRec.city,
+            state: rawRec.state,
+            entranceExam: rawRec.entranceExam,
+            entranceScore: rawRec.entranceScore,
+            budgetRange: rawRec.budgetRange,
+            hostelRequired: rawRec.hostelRequired,
+            loanRequired: rawRec.loanRequired,
+          },
+        });
+      }
     }
 
     return NextResponse.json({ ok: true, batchId, count: rows.length });

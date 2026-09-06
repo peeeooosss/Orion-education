@@ -20,6 +20,7 @@ interface FollowUp {
   leadName: string | null;
   leadPhone: string | null;
   leadType?: string;
+  leadCategory?: string;
   leadStage?: string;
 }
 
@@ -31,15 +32,17 @@ const TYPE_ICONS: Record<string, typeof PhoneCall> = {
 };
 
 const SOURCE_BADGES: Record<string, string> = {
-  scholarship: "bg-gold-100 text-gold-700",
-  enquiry: "bg-blue-100 text-blue-700",
-  raw: "bg-slate-100 text-slate-600",
+  general: "bg-gold-100 text-gold-700",
+  college_specific: "bg-blue-100 text-blue-700",
+  study_abroad: "bg-indigo-100 text-indigo-700",
+  imported: "bg-slate-100 text-slate-600",
 };
 
 const SOURCE_LABELS: Record<string, string> = {
-  scholarship: "Scholarship",
-  enquiry: "Enquiry",
-  raw: "Imported Student",
+  general: "Free Enquiry",
+  college_specific: "College-Specific",
+  study_abroad: "Study Abroad",
+  imported: "Imported Student",
 };
 
 export default function AgentFollowUpsPage() {
@@ -86,7 +89,7 @@ export default function AgentFollowUpsPage() {
     setFollowUps((prev) => prev.filter((fu) => fu.id !== id));
   }
 
-  const sourceFiltered = sourceFilter === "all" ? followUps : followUps.filter((fu) => fu.leadType === sourceFilter);
+  const sourceFiltered = sourceFilter === "all" ? followUps : followUps.filter((fu) => (fu.leadCategory || fu.leadType || "general") === sourceFilter);
   const pending = sourceFiltered.filter((fu) => !fu.completed);
   const overdue = pending.filter((fu) => new Date(fu.dueAt) < new Date());
   const today = pending.filter((fu) => {
@@ -102,16 +105,17 @@ export default function AgentFollowUpsPage() {
       <div>
         <p className="text-sm font-semibold text-gold-700">Pipeline</p>
         <h1 className="mt-1 text-2xl font-bold text-brand-950">Follow-ups</h1>
-        <p className="mt-1 text-sm text-slate-600">All follow-ups from every source — Enquiry, Scholarship, and Imported Students — in one pipeline.</p>
+        <p className="mt-1 text-sm text-slate-600">Your follow-ups across Free Enquiries, College, Study Abroad, and Imported Leads.</p>
       </div>
 
       {/* Source filter tabs */}
       <div className="flex gap-2">
         {[
-          { key: "all", label: "All Sources" },
-          { key: "scholarship", label: "💰 Scholarship" },
-          { key: "enquiry", label: "🌐 Enquiry" },
-          { key: "raw", label: "📋 Imported" },
+          { key: "all", label: "All" },
+          { key: "general", label: "💰 Free Enquiry" },
+          { key: "college_specific", label: "🏛️ College-Specific" },
+          { key: "study_abroad", label: "🌍 Study Abroad" },
+          { key: "imported", label: "📋 Imported" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -196,8 +200,8 @@ export default function AgentFollowUpsPage() {
                       <p className="text-xs text-slate-500">{fu.leadPhone}</p>
                     </td>
                     <td className="p-3.5">
-                      <Badge className={SOURCE_BADGES[fu.leadType || "enquiry"]}>
-                        {SOURCE_LABELS[fu.leadType || "enquiry"]}
+                      <Badge className={SOURCE_BADGES[fu.leadCategory || "general"]}>
+                        {SOURCE_LABELS[fu.leadCategory || "general"]}
                       </Badge>
                     </td>
                     <td className="p-3.5">
@@ -216,7 +220,7 @@ export default function AgentFollowUpsPage() {
                     <td className="p-3.5">
                       {!fu.completed && (
                         <div className="flex items-center gap-2">
-                          <Link href={fu.leadType === "raw" ? "/agent/raw-data" : "/agent/dashboard"}>
+                          <Link href="/agent/dashboard?filter=all">
                             <Button size="sm" variant="outline" className="h-7 text-[11px]">
                               <PhoneCall className="h-3 w-3" /> Open
                             </Button>

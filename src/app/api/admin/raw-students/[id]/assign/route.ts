@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromCookie } from "@/server/auth";
 import { db } from "@/server/db";
-import { rawStudents, leads, contacts, leadActivities, followUps, users, agents } from "@/server/db/schema";
+import { rawStudents, users } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
+import { assignLead } from "@/lib/leads";
 
 export async function POST(
   req: NextRequest,
@@ -35,80 +36,22 @@ export async function POST(
 
   const rawRecord = raw[0];
 
-  // Create a contact
-  const contactId = `c-raw-${id}`;
-  try {
-    await db.insert(contacts).values({
-      id: contactId,
-      name: rawRecord.studentName || "Unknown",
-      phone: rawRecord.phone || "",
-      email: rawRecord.email,
-      city: rawRecord.city,
-      state: rawRecord.state,
-    });
-  } catch {
-    // contact may already exist
+  // A canonical lead already exists (created during import). Assign it.
+  if (!rawRecord.leadId) {
+    return NextResponse.json({ error: "Imported student has no CRM lead yet" }, { status: 400 });
   }
 
-  // Create a lead
-  const leadId = `l-raw-${id}`;
-  try {
-    await db.insert(leads).values({
-      id: leadId,
-      contactId,
-      agentId,
-      stage: "New",
-      source: "Imported Raw Data",
-      leadType: "raw",
-      lookingFor: rawRecord.preferredProgram,
-      targetCollege: rawRecord.preferredCollege,
-      targetProgram: rawRecord.preferredProgram,
-      scoreBand: rawRecord.scoreBand,
-      stream: rawRecord.stream,
-      rawStudentId: id,
-      assignedBy: session.userId,
-      assignedAt: new Date(),
-      assignmentNote: note || null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+  await assignLead({
+    leadId: rawRecord.leadId,
+    agentId,
+    assignedBy: session.userId,
+    note: note || null,
+  });
 
-    // Update raw student status
-    await db.update(rawStudents).set({
-      status: "Assigned",
-      assignedAgent: agentId,
-      leadId,
-    }).where(eq(rawStudents.id, id));
+  await db.update(rawStudents).set({
+    status: "Assigned",
+    assignedAgent: agentId,
+  }).where(eq(rawStudents.id, id));
 
-    // Increment agent's leadsAssigned counter
-    const agentStats = await db.select({ leadsAssigned: agents.leadsAssigned }).from(agents).where(eq(agents.id, agentId)).limit(1);
-    await db.update(agents).set({
-      leadsAssigned: (agentStats[0]?.leadsAssigned ?? 0) + 1,
-    }).where(eq(agents.id, agentId));
-
-    // Log assignment activity
-    await db.insert(leadActivities).values({
-      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      leadId,
-      agentId,
-      kind: "assignment",
-      note: note || `Assigned by admin from raw data import`,
-    });
-
-    // Auto-create a follow-up so the lead appears in agent's Follow-ups pipeline
-    await db.insert(followUps).values({
-      id: `fu-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      leadId,
-      agentId,
-      dueAt: new Date(),
-      followType: "Call",
-      priority: "Normal",
-      note: `New imported student: ${rawRecord.studentName}. Call to introduce Orion.`,
-    });
-
-    return NextResponse.json({ ok: true, leadId });
-  } catch (err) {
-    console.error("Assignment error:", err);
-    return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
-  }
+  return NextResponse.json({ ok: true, leadId: rawRecord.leadId });
 }

@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromCookie } from "@/server/auth";
 import { db } from "@/server/db";
-import { rawStudents, contacts, leads, leadActivities } from "@/server/db/schema";
+import { rawStudents } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { createLead, findOrCreateContact } from "@/lib/leads";
 
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSessionFromCookie();
-  if (!session || (session.role !== "agent" && session.role !== "admin")) {
+  if (!session || session.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -23,10 +23,12 @@ export async function POST(
     return NextResponse.json({ error: "Raw student not found" }, { status: 404 });
   }
 
-  // Create contact
-  const contactId = `c-${nanoid(10)}`;
-  await db.insert(contacts).values({
-    id: contactId,
+  // A canonical lead is created during import; reuse it if it already exists.
+  if (raw.leadId) {
+    return NextResponse.json({ leadId: raw.leadId });
+  }
+
+  const contactId = await findOrCreateContact({
     name: raw.studentName || "Unknown",
     phone: raw.phone || "",
     email: raw.email,
@@ -34,40 +36,26 @@ export async function POST(
     state: raw.state,
   });
 
-  // Create lead
-  const leadId = `l-${nanoid(10)}`;
-  await db.insert(leads).values({
-    id: leadId,
+  // Admin-only, unassigned. Admin assigns every lead.
+  const leadId = await createLead({
     contactId,
-    agentId: session.userId,
-    stage: "New",
     source: "Imported Raw Data",
     leadType: "raw",
+    leadCategory: "imported",
+    agentId: null,
+    assignedBy: session.userId,
+    assignmentNote: "Imported student — awaiting admin assignment",
     lookingFor: raw.preferredProgram || "Admission counselling",
     targetCollege: raw.preferredCollege || "College to be confirmed",
-    scoreBand: raw.scoreBand,
-    stream: raw.stream,
-    callStatus: raw.callStatus || "Not Called",
-    interestStatus: raw.interestStatus || "Not Assessed",
+    scoreBand: raw.scoreBand || undefined,
+    stream: raw.stream || undefined,
     rawStudentId: id,
-    assignedBy: session.userId,
-    assignedAt: new Date(),
   });
 
-  // Update raw student with lead link
   await db.update(rawStudents).set({
     leadId,
-    status: "Converted to Lead",
+    status: "Assigned",
   }).where(eq(rawStudents.id, id));
-
-  // Log activity
-  await db.insert(leadActivities).values({
-    id: `act-${nanoid(10)}`,
-    leadId,
-    agentId: session.userId,
-    kind: "assignment",
-    note: `Converted from imported student: ${raw.studentName}`,
-  });
 
   return NextResponse.json({ leadId, contactId });
 }

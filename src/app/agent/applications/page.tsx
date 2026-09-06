@@ -1,5 +1,5 @@
-import { ApplicationsBoard } from "@/components/agent/ApplicationsBoard";
+import { redirect } from "next/navigation";
 
-export default function AgentApplicationsPage() {
-  return <ApplicationsBoard />;
+export default function RedirectPage() {
+  redirect("/agent/dashboard");
 }

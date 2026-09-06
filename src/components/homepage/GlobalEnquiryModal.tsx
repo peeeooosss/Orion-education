@@ -77,26 +77,29 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
   }
 
   async function handleSubmit() {
-    if (!name.trim() || phone.trim().length < 10 || !selectedCollege) return;
+    if (!name.trim() || phone.trim().length < 10) return;
     setError("");
     setLoading(true);
     try {
+      const body: Record<string, unknown> = {
+        name: name.trim(),
+        phone: phone.trim(),
+        stream,
+        scoreBand,
+        source: "Free Enquiry",
+        lookingFor: selectedCollege ? `${selectedProgram} · ${stream}` : stream,
+        admissionTimeline: timeline,
+      };
+      if (selectedCollege) {
+        body.targetCollege = selectedCollege.id;
+        body.collegeId = selectedCollege.id;
+        body.collegeName = selectedCollege.name;
+        body.targetProgram = selectedProgram;
+      }
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: phone.trim(),
-          stream,
-          scoreBand,
-          source: "Free Enquiry",
-          targetCollege: selectedCollege.id,
-          collegeId: selectedCollege.id,
-          collegeName: selectedCollege.name,
-          targetProgram: selectedProgram,
-          lookingFor: `${selectedProgram} · ${stream}`,
-          admissionTimeline: timeline,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -169,13 +172,13 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
               </div>
 
               <div className="space-y-2">
-                <Label className="text-surface-800">College</Label>
+                <Label className="text-surface-800">College (optional)</Label>
                 <Select
                   value={selectedCollege?.id ?? ""}
                   onValueChange={handleCollegeChange}
                  >
                     <SelectTrigger className="h-11 w-full rounded-2xl border-surface-200">
-                     <SelectValue placeholder="Select a college" />
+                     <SelectValue placeholder="Select a college (optional)" />
                   </SelectTrigger>
                   <SelectContent>
                      {COLLEGE_OPTIONS.map((c) => (
@@ -258,7 +261,7 @@ export function GlobalEnquiryModal({ open, onOpenChange }: { open: boolean; onOp
               <Button
                 variant="gold"
                 className="h-12 w-full"
-                disabled={!name.trim() || phone.trim().length < 10 || !selectedCollege || loading}
+                disabled={!name.trim() || phone.trim().length < 10 || loading}
                 onClick={handleSubmit}
               >
                 <Sparkles className="h-4 w-4" />

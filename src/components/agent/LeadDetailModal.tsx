@@ -41,10 +41,10 @@ const intentColors: Record<string, string> = {
 };
 
 const leadTypeBadge: Record<string, { label: string; cls: string }> = {
-  scholarship: { label: "Scholarship", cls: "bg-gold-100 text-gold-700" },
-  enquiry: { label: "Enquiry only", cls: "bg-blue-100 text-blue-700" },
-  raw: { label: "Raw cold-call", cls: "bg-slate-200 text-slate-700" },
-  website: { label: "Website", cls: "bg-teal-100 text-teal-700" },
+  general: { label: "Free Enquiry", cls: "bg-gold-100 text-gold-700" },
+  college_specific: { label: "College-Specific", cls: "bg-blue-100 text-blue-700" },
+  study_abroad: { label: "Study Abroad", cls: "bg-indigo-100 text-indigo-700" },
+  imported: { label: "Imported Student", cls: "bg-slate-200 text-slate-700" },
 };
 
 export function LeadDetailModal({
@@ -91,8 +91,8 @@ export function LeadDetailModal({
               <div className="flex items-center gap-2">
                 <p className="text-base font-bold text-brand-950">{lead.name}</p>
                 <Badge className={intentColors[lead.intentLevel]}>{lead.intentLevel} intent</Badge>
-                <Badge className={leadTypeBadge[lead.leadType]?.cls ?? "bg-slate-100 text-slate-600"}>
-                  {leadTypeBadge[lead.leadType]?.label ?? lead.leadType}
+                <Badge className={leadTypeBadge[lead.leadCategory || lead.leadType]?.cls ?? "bg-slate-100 text-slate-600"}>
+                  {leadTypeBadge[lead.leadCategory || lead.leadType]?.label ?? lead.leadCategory || lead.leadType}
                 </Badge>
                 {lead.intentOverride && <Badge className="bg-brand-100 text-brand-700">Agent override</Badge>}
                 {lead.callConnected && (

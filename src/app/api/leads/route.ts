@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { computeScholarship, computeIntentLevel } from "@/lib/scholarship";
 import type { Stream, ScoreBand } from "@/lib/scholarship";
 import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
+import { createLead, findOrCreateContact, resolveLeadCategory } from "@/lib/leads";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookie();
@@ -15,8 +16,11 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const source = searchParams.get("source"); // "scholarship" | "enquiry" | "raw"
+  const source = searchParams.get("source"); // legacy leadType filter
+  const category = searchParams.get("category"); // general | college_specific | study_abroad | imported
   const stage = searchParams.get("stage");
+  const intent = searchParams.get("intent"); // Hot | Warm | Cold
+  const assignment = searchParams.get("assignment"); // Assigned | Unassigned
   const search = searchParams.get("search");
   const sort = searchParams.get("sort") || "smart"; // "smart" | "newest" | "oldest"
   const agentFilter = searchParams.get("agentId"); // admin only
@@ -39,8 +43,20 @@ export async function GET(req: NextRequest) {
     conditions.push(eq(leads.leadType, source));
   }
 
+  if (category) {
+    conditions.push(eq(leads.leadCategory, category));
+  }
+
   if (stage) {
     conditions.push(eq(leads.stage, stage));
+  }
+
+  if (intent) {
+    conditions.push(eq(leads.intentLevel, intent));
+  }
+
+  if (assignment) {
+    conditions.push(eq(leads.assignmentStatus, assignment));
   }
 
   if (search) {
@@ -48,7 +64,9 @@ export async function GET(req: NextRequest) {
       or(
         ilike(contacts.name, `%${search}%`),
         ilike(contacts.phone, `%${search}%`),
-        ilike(contacts.email, `%${search}%`)
+        ilike(contacts.email, `%${search}%`),
+        ilike(leads.targetCollege, `%${search}%`),
+        ilike(leads.targetProgram, `%${search}%`)
       )!
     );
   }
@@ -78,8 +96,13 @@ export async function GET(req: NextRequest) {
       stage: leads.stage,
       source: leads.source,
       leadType: leads.leadType,
+      leadCategory: leads.leadCategory,
+      assignmentStatus: leads.assignmentStatus,
       lookingFor: leads.lookingFor,
       targetCollege: leads.targetCollege,
+      targetProgram: leads.targetProgram,
+      collegeId: leads.collegeId,
+      admissionTimeline: leads.admissionTimeline,
       scholarshipAmount: leads.scholarshipAmount,
       scholarshipApplied: leads.scholarshipApplied,
       intentLevel: leads.intentLevel,
@@ -87,21 +110,30 @@ export async function GET(req: NextRequest) {
       callStatus: leads.callStatus,
       interestStatus: leads.interestStatus,
       callConnected: leads.callConnected,
-      lastCalledAt: leads.lastCalledAt,
+      nextAction: leads.nextAction,
       nextFollowUpAt: leads.nextFollowUpAt,
+      lastCalledAt: leads.lastCalledAt,
+      scoreBand: leads.scoreBand,
+      stream: leads.stream,
+      studyCountry: leads.studyCountry,
+      studyLevel: leads.studyLevel,
+      studyField: leads.studyField,
       createdAt: leads.createdAt,
       rawStudentId: leads.rawStudentId,
       assignmentNote: leads.assignmentNote,
+      agentId: leads.agentId,
       // Contact info
       contactName: contacts.name,
       contactPhone: contacts.phone,
       contactEmail: contacts.email,
       contactCity: contacts.city,
       // Agent info
-      agentName: agents.avatarColor,
+      agentName: users.name,
+      agentAvatar: agents.avatarColor,
     })
     .from(leads)
     .leftJoin(contacts, eq(leads.contactId, contacts.id))
+    .leftJoin(users, eq(leads.agentId, users.id))
     .leftJoin(agents, eq(leads.agentId, agents.id))
     .where(where)
     .orderBy(orderClause);
@@ -152,6 +184,14 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No valid fields" }, { status: 400 });
     }
 
+    // Agents may only mutate leads assigned to them.
+    if (session.role === "agent") {
+      const leadResult = await db.select({ agentId: leads.agentId }).from(leads).where(eq(leads.id, id)).limit(1);
+      if (!leadResult[0] || leadResult[0].agentId !== session.userId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     patch.updatedAt = new Date();
 
     await db.update(leads).set(patch).where(eq(leads.id, id));
@@ -163,12 +203,16 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// ─── POST: Public lead creation (Free Enquiry, Scholarship Checker) ──────────
+// ─── POST: Public lead creation (Free Enquiry, College Enquiry, Study Abroad, Website Visit) ──────────
 export async function POST(req: NextRequest) {
   const start = Date.now();
   try {
     const body = await req.json();
-    const { name, phone, email, source, stream, scoreBand, targetCollege, targetProgram, lookingFor, score, collegeId, collegeName: rawCollegeName, admissionTimeline } = body;
+    const {
+      name, phone, email, source, stream, scoreBand, targetCollege, targetProgram,
+      lookingFor, score, collegeId, collegeName: rawCollegeName, admissionTimeline,
+      studyCountry, studyLevel, studyField,
+    } = body;
 
     if (!name || name.trim().length < 2) {
       return NextResponse.json({ error: "Valid name is required" }, { status: 400 });
@@ -191,60 +235,14 @@ export async function POST(req: NextRequest) {
     else if (source === "Website Visit" || source === "Study Abroad") leadType = "website";
     else leadType = "enquiry";
 
+    const leadCategory = resolveLeadCategory(source);
+
     // Find or create contact by phone (normalize)
-    const phoneNorm = phone.replace(/\s+/g, "");
-    const existing = await db
-      .select()
-      .from(contacts)
-      .where(eq(contacts.phone, phoneNorm))
-      .limit(1);
-
-    let contactId: string;
-    if (existing.length > 0) {
-      contactId = existing[0].id;
-      await db
-        .update(contacts)
-        .set({ name: name.trim(), email: email || null })
-        .where(eq(contacts.id, contactId));
-    } else {
-      contactId = `c-${nanoid(10)}`;
-      await db.insert(contacts).values({
-        id: contactId,
-        name: name.trim(),
-        phone: phoneNorm,
-        email: email || null,
-      });
-    }
-
-    // Select agent: prefer DB agents sorted by fewest conversions (round-robin-ish)
-    const agentUsers = await db
-      .select({ id: users.id, name: users.name })
-      .from(users)
-      .where(eq(users.role, "agent"));
-
-    // Get agent stats (conversions) to pick the least busy agent
-    const agentStats = agentUsers.length > 0
-      ? await db
-          .select({ id: agents.id, conversions: agents.conversions, leadsAssigned: agents.leadsAssigned })
-          .from(agents)
-          .where(
-            agentUsers.length === 1
-              ? eq(agents.id, agentUsers[0].id)
-              : sql`id IN (${agentUsers.map((u) => `'${u.id}'`).join(",")})`
-          )
-      : [];
-
-    const statsMap = new Map(agentStats.map((a) => [a.id, a]));
-
-    // Sort: prefer agents with fewest conversions+assignments (load balancing)
-    const sortedAgents = agentUsers
-      .map((u) => {
-        const s = statsMap.get(u.id);
-        return { id: u.id, name: u.name, conv: s?.conversions ?? 0, assigned: s?.leadsAssigned ?? 0 };
-      })
-      .sort((a, b) => (a.conv + a.assigned) - (b.conv + b.assigned));
-
-    const assignedAgent = sortedAgents[0] ?? { id: null, name: null };
+    const contactId = await findOrCreateContact({
+      name,
+      phone,
+      email: email || null,
+    });
 
     // Compute scholarship and intent
     const sb = (scoreBand || score || "75-90") as ScoreBand;
@@ -257,19 +255,23 @@ export async function POST(req: NextRequest) {
 
     // Get college rating for scholarship computation
     let collegeRating = 4;
+    let resolvedCollegeId: string | null = null;
     if (collegeData) {
       const c = await db
-        .select({ name: colleges.name, rating: colleges.rating })
+        .select({ name: colleges.name, rating: colleges.rating, id: colleges.id })
         .from(colleges)
         .where(eq(colleges.id, collegeData))
         .limit(1);
       if (c[0]) {
         collegeRating = Number(c[0].rating) || 4;
         collegeName = collegeName ?? c[0].name;
+        resolvedCollegeId = c[0].id;
+      } else {
+        resolvedCollegeId = collegeData.startsWith("college-") ? collegeData : null;
       }
     }
 
-    const targetDisplay = collegeName ?? collegeData;
+    const targetDisplay = collegeName ?? collegeData ?? null;
 
     // Orion partner colleges have capped MBA scholarships (mirrors client store logic)
     const scholarship =
@@ -278,100 +280,76 @@ export async function POST(req: NextRequest) {
         : computeScholarship({ stream: st, scoreBand: sb, collegeRating });
     const intent = computeIntentLevel({ scoreBand: sb, scholarship });
 
-    const leadId = `l-${nanoid(12)}`;
-    const now = new Date();
-
-    // Insert lead
-    await db.insert(leads).values({
-      id: leadId,
+    // Insert lead — never auto-assign. Admin assigns every lead.
+    const leadId = await createLead({
       contactId,
-      agentId: assignedAgent.id,
-      stage: "New",
-      source: source,
+      source,
       leadType,
-      lookingFor: lookingFor || `${targetProgram || targetDisplay} · ${admissionTimeline || "This admission cycle"}`,
+      leadCategory,
+      agentId: null,
+      assignedBy: null,
+      assignmentNote: `Captured via ${source}. Awaiting admin assignment.`,
+      lookingFor: lookingFor || `${targetProgram || targetDisplay || "Admission"} · ${admissionTimeline || "This admission cycle"}`,
       targetCollege: targetDisplay,
       targetProgram: targetProgram || null,
       admissionTimeline: admissionTimeline || null,
-      scholarshipAmount: String(scholarship),
+      collegeId: resolvedCollegeId,
+      scholarshipAmount: scholarship,
       scholarshipApplied: leadType === "scholarship",
-      paymentStatus: "Not Required",
       intentLevel: intent,
-      intentScore: 0,
       scoreBand: sb,
       stream: st,
-      callStatus: "Not Called",
-      interestStatus: "Not Assessed",
-      rawStudentId: null,
-      assignedBy: sessionUserId,
-      assignedAt: now,
-      assignmentNote: `Auto-assigned via ${source}`,
+      studyCountry: studyCountry || null,
+      studyLevel: studyLevel || null,
+      studyField: studyField || null,
     });
 
     // Create a matching website_leads tracking row for Free Enquiry so it shows
-    // in the Admin & Agent "Website Leads" sections as a Free Enquiry.
+    // in the legacy Admin & Agent "Website Leads" sections as a Free Enquiry.
     if (leadType === "website" && source === "Free Enquiry") {
       await db.insert(websiteLeads).values({
         id: `wvl-${nanoid(12)}`,
         name: name.trim(),
-        phone: phoneNorm,
+        phone: phone.replace(/\s+/g, ""),
         email: email?.trim() || null,
-        collegeId: collegeId || null,
+        collegeId: resolvedCollegeId,
         collegeName: rawCollegeName?.trim() || targetDisplay || null,
         program: targetProgram?.trim() || null,
         admissionTimeline: admissionTimeline || null,
         userId: sessionUserId,
         source: "free-enquiry",
-        assignedAgent: assignedAgent.id,
+        assignedAgent: null,
         leadId,
-        status: assignedAgent.id ? "Assigned" : "Unassigned",
+        status: "Unassigned",
       }).onConflictDoNothing();
     }
 
-    // Increment agent's leadsAssigned
-    if (assignedAgent.id) {
-      await db
-        .update(agents)
-        .set({ leadsAssigned: sql`${agents.leadsAssigned} + 1` })
-        .where(eq(agents.id, assignedAgent.id));
-    }
-
-    // Log activity
+    // Log creation activity
     await db.insert(leadActivities).values({
       id: `act-${nanoid(12)}`,
       leadId,
-      agentId: assignedAgent.id,
+      agentId: null,
       kind: "status_change",
-      note: `Lead created via ${source}. Name: ${name.trim()}. Phone: ${phoneNorm}.`,
+      note: `Lead created via ${source}. Name: ${name.trim()}. Phone: ${phone.replace(/\s+/g, "")}. Awaiting admin assignment.`,
       oldStage: null,
       newStage: "New",
     });
 
-    // Create first follow-up: due in 30 minutes
-    await db.insert(followUps).values({
-      id: `fu-${nanoid(12)}`,
-      leadId,
-      agentId: assignedAgent.id as string,
-      dueAt: new Date(Date.now() + 30 * 60 * 1000),
-      followType: "Call",
-      priority: leadType === "scholarship" ? "Important" : "Normal",
-      note: `New ${leadType} lead from ${source}. Call to discuss ${targetProgram || targetDisplay || "admission"}.`,
-    });
-
-    console.log(`[leads POST] Created ${leadType} lead ${leadId} agent=${assignedAgent.id} (${Date.now() - start}ms)`);
+    console.log(`[leads POST] Created ${leadCategory} lead ${leadId} (unassigned) (${Date.now() - start}ms)`);
 
     return NextResponse.json({
       lead: {
         id: leadId,
         name: name.trim(),
-        phone: phoneNorm,
+        phone: phone.replace(/\s+/g, ""),
         source,
         leadType,
+        leadCategory,
         targetCollege: targetDisplay,
         scholarshipAmount: scholarship,
         intentLevel: intent,
-        assignedAgent: assignedAgent.name ?? "Unassigned",
-        createdAt: now.toISOString(),
+        assignedAgent: null,
+        createdAt: new Date().toISOString(),
       },
     });
   } catch (error) {

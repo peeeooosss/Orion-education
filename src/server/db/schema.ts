@@ -60,9 +60,18 @@ export const leads = pgTable("leads", {
 
   // Source
   source: text("source").notNull(),
-  // "Scholarship Checker" | "College Enquiry" | "Website Visit" | "Imported Raw Data"
+  // "Scholarship Checker" | "College Enquiry" | "Website Visit" | "Study Abroad" | "Free Enquiry" | "Imported Raw Data"
   leadType: text("lead_type").notNull(),
   // "scholarship" | "enquiry" | "raw"
+  leadCategory: text("lead_category").notNull().default("general"),
+  // "general" | "college_specific" | "study_abroad" | "imported"
+  assignmentStatus: text("assignment_status").notNull().default("Unassigned"),
+  // "Unassigned" | "Assigned"
+  sourceForm: text("source_form"),
+  collegeId: text("college_id").references(() => colleges.id),
+  studyCountry: text("study_country"),
+  studyLevel: text("study_level"),
+  studyField: text("study_field"),
 
   // Student context
   lookingFor: text("looking_for"),

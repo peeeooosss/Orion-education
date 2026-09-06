@@ -136,6 +136,7 @@ export interface Lead {
   paymentStatus?: "Not Required" | "Pending" | "Paid";
   leadType: LeadType;
   scholarshipApplied: boolean;
+  leadCategory?: string;
 }
 
 export interface WebsiteVisitLead {

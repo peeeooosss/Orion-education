@@ -142,14 +142,14 @@ function DirectoryEnquiryForm({ collegeId, collegeName, programs }: DirectoryEnq
       <div className="overflow-hidden rounded-3xl border-2 border-gold-500 bg-white shadow-glow-gold">
         <div className="bg-brand-gradient px-5 py-4 text-white">
           <p className="flex items-center gap-2 font-display text-lg font-bold">
-            <Sparkles className="h-4 w-4 text-gold-400" /> Free Enquiry
+            <Sparkles className="h-4 w-4 text-gold-400" /> Apply Now
           </p>
         </div>
         <div className="px-5 py-8 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gold-100">
             <Rocket className="h-7 w-7 text-gold-700" />
           </div>
-          <h3 className="mt-3 font-display text-lg font-bold text-surface-900">Enquiry sent!</h3>
+          <h3 className="mt-3 font-display text-lg font-bold text-surface-900">Application request received!</h3>
           <p className="mt-1 text-sm text-surface-600">A counsellor will reach out within minutes.</p>
         </div>
       </div>
@@ -160,9 +160,9 @@ function DirectoryEnquiryForm({ collegeId, collegeName, programs }: DirectoryEnq
     <div className="overflow-hidden rounded-3xl border-2 border-gold-500 bg-white shadow-glow-gold">
       <div className="bg-brand-gradient px-5 py-4 text-white">
         <p className="flex items-center gap-2 font-display text-lg font-bold">
-          <Sparkles className="h-4 w-4 text-gold-400" /> Free Enquiry
+          <Sparkles className="h-4 w-4 text-gold-400" /> Apply Now
         </p>
-        <p className="mt-0.5 text-xs text-white/70">A counsellor calls you back — no fee, no obligation.</p>
+        <p className="mt-0.5 text-xs text-white/70">Submit your application request — our counsellor will guide you.</p>
       </div>
       <div className="space-y-4 p-5">
         <div className="space-y-2">
@@ -244,7 +244,7 @@ function DirectoryEnquiryForm({ collegeId, collegeName, programs }: DirectoryEnq
           disabled={!name.trim() || phone.trim().length < 10 || loading}
           onClick={handleSubmit}
         >
-          <Sparkles className="h-4 w-4" /> {loading ? "Sending..." : "Get free counselling"}
+          <Sparkles className="h-4 w-4" /> {loading ? "Submitting…" : "Apply Now"}
         </Button>
         <p className="flex items-center justify-center gap-1.5 text-[11px] text-surface-500">
           <BadgeCheck className="h-3.5 w-3.5 text-gold-700" /> No payment required
@@ -582,7 +582,7 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-surface-900">{college.name}</p>
             <p className="text-xs text-surface-500">
-              {isPartner ? "Orion Partner · " : ""}{dbPlacementPct != null ? `${dbPlacementPct}% placement` : "Free counselling"}
+              {isPartner ? "Orion Partner · " : ""}{dbPlacementPct != null ? `${dbPlacementPct}% placement` : "Apply now"}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -592,7 +592,7 @@ export function DirectoryCollegeDetail({ college }: { college: CollegeDirectoryE
               </Button>
             )}
             <Button onClick={() => setEnquiryOpen(true)} variant="gold" className="!h-11 !px-4 text-xs">
-              <PhoneCall className="h-3.5 w-3.5" /> Enquire
+              <PhoneCall className="h-3.5 w-3.5" /> Apply Now
             </Button>
           </div>
         </div>

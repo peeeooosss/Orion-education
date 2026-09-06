@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromCookie } from "@/server/auth";
 import { db } from "@/server/db";
-import { websiteLeads, leads, contacts, leadActivities, followUps, users, agents } from "@/server/db/schema";
+import { websiteLeads, users } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { assignLead, createLead, findOrCreateContact, resolveLeadCategory } from "@/lib/leads";
 
 export async function POST(
   req: NextRequest,
@@ -35,95 +35,46 @@ export async function POST(
   }
   const record = wl[0];
 
-  // If already assigned, just update the assignee unless a lead already exists
+  // If this legacy tracking row has no linked CRM lead yet, create one first.
   let leadId = record.leadId ?? null;
-
-  // Determine source labels
-  const isAbroad = record.source === "study-abroad";
-  const sourceLabel = isAbroad ? "Study Abroad" : "Website Visit";
-
-  // Create a contact (by phone, idempotent)
-  const contactId = `c-wl-${id}`;
-  try {
-    await db.insert(contacts).values({
-      id: contactId,
-      name: record.name || "Unknown",
-      phone: record.phone || "",
-      email: record.email,
-    });
-  } catch {
-    // contact may already exist
-  }
-
-  // Create a lead if not already created
   if (!leadId) {
-    const program = record.program;
-    const lookingFor =
-      [program, record.admissionTimeline].filter(Boolean).join(" · ") ||
-      (isAbroad ? "Study Abroad enquiry" : "Website enquiry");
+    const isAbroad = record.source === "study-abroad";
+    const sourceLabel = isAbroad ? "Study Abroad" : "Website Visit";
+    const leadCategory = resolveLeadCategory(sourceLabel);
 
-    leadId = `l-wl-${id}`;
-    await db.insert(leads).values({
-      id: leadId,
-      contactId,
-      agentId,
-      stage: "New",
+    leadId = await createLead({
+      contactId: await findOrCreateContact({
+        name: record.name || "Unknown",
+        phone: record.phone || "",
+        email: record.email,
+      }),
       source: sourceLabel,
-      leadType: "website",
-      lookingFor,
+      leadType: isAbroad ? "website" : "enquiry",
+      leadCategory,
+      lookingFor:
+        [record.program, record.admissionTimeline].filter(Boolean).join(" · ") ||
+        (isAbroad ? "Study Abroad enquiry" : "Website enquiry"),
       targetCollege: record.collegeName,
       targetProgram: record.program,
       admissionTimeline: record.admissionTimeline,
-      assignedBy: session.userId,
-      assignedAt: new Date(),
-      assignmentNote: note || `Assigned by admin from website lead (${sourceLabel})`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      assignmentNote: note || `${sourceLabel} — awaiting assignment`,
     });
 
-    // Increment agent's leadsAssigned counter
-    const agentStats = await db.select({ leadsAssigned: agents.leadsAssigned }).from(agents).where(eq(agents.id, agentId)).limit(1);
-    await db.update(agents).set({
-      leadsAssigned: (agentStats[0]?.leadsAssigned ?? 0) + 1,
-    }).where(eq(agents.id, agentId));
-
-    // Log assignment activity
-    await db.insert(leadActivities).values({
-      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      leadId,
-      agentId,
-      kind: "assignment",
-      note: note || `Assigned by admin from website lead (${sourceLabel})`,
-    });
-
-    // Auto-create a follow-up so the lead appears in agent's Follow-ups pipeline
-    await db.insert(followUps).values({
-      id: `fu-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      leadId,
-      agentId,
-      dueAt: new Date(),
-      followType: "Call",
-      priority: "Normal",
-      note: `New website lead: ${record.name}. Call to introduce Orion.`,
-    });
+    await db.update(websiteLeads).set({ leadId }).where(eq(websiteLeads.id, id));
   }
 
-  // Update the website lead tracking record
+  // Assign (or reassign) to the agent
+  await assignLead({
+    leadId,
+    agentId,
+    assignedBy: session.userId,
+    note: note || null,
+  });
+
   await db.update(websiteLeads).set({
     status: "Assigned",
     assignedAgent: agentId,
-    leadId: leadId || null,
   }).where(eq(websiteLeads.id, id));
-
-  // If this website lead is already linked to a CRM lead, move it to the new agent
-  if (leadId) {
-    await db.update(leads).set({
-      agentId,
-      assignedAt: new Date(),
-      assignmentNote: `Reassigned by admin to ${agentUser[0].name}`,
-      updatedAt: new Date(),
-    }).where(eq(leads.id, leadId));
-  }
 
   return NextResponse.json({ ok: true, leadId });
 }

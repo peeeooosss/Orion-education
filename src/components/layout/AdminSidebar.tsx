@@ -3,23 +3,38 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, MousePointerClick, Building2, LogOut, Images } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, MousePointerClick, Building2, LogOut, Images, Inbox, Sparkles, GraduationCap, Globe2, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { useRouter } from "next/navigation";
 
 
-const navItems = [
-  { title: "Master Overview", href: "/admin/dashboard", icon: LayoutDashboard, section: null },
-  { title: "Enquiries & Conversions", href: "/admin/dashboard?section=analytics", icon: BarChart3, section: "analytics" },
-  { title: "Scholarship Budgets", href: "/admin/budgets", icon: Wallet, section: null },
-  { title: "Colleges", href: "/admin/colleges", icon: Building2, section: null },
-  { title: "Agents", href: "/admin/agents", icon: Users2, section: null },
-  { title: "Student RAW DATA", href: "/admin/raw-data", icon: Upload, section: null },
-  { title: "Payments", href: "/admin/payments", icon: IndianRupee, section: null },
-  { title: "Website Leads", href: "/admin/website-leads", icon: MousePointerClick, section: null },
-  { title: "Applications Pipeline", href: "/admin/dashboard?section=applications", icon: FileStack, section: "applications" },
-  { title: "Gallery", href: "/admin/gallery", icon: Images, section: null },
+const navGroups: { section: string; items: { title: string; href: string; icon: React.ElementType; section?: string | null }[] }[] = [
+  {
+    section: "Main",
+    items: [
+      { title: "Leads Overview", href: "/admin/leads", icon: Inbox, section: null },
+      { title: "General Enquiries", href: "/admin/leads?category=general", icon: Sparkles, section: null },
+      { title: "College-Specific", href: "/admin/leads?category=college_specific", icon: GraduationCap, section: null },
+      { title: "Study Abroad", href: "/admin/leads?category=study_abroad", icon: Globe2, section: null },
+      { title: "Import Students", href: "/admin/leads?category=imported", icon: FileSpreadsheet, section: null },
+    ],
+  },
+  {
+    section: "Management",
+    items: [
+      { title: "Master Overview", href: "/admin/dashboard", icon: LayoutDashboard, section: null },
+      { title: "Enquiries & Conversions", href: "/admin/dashboard?section=analytics", icon: BarChart3, section: "analytics" },
+      { title: "Scholarship Budgets", href: "/admin/budgets", icon: Wallet, section: null },
+      { title: "Colleges", href: "/admin/colleges", icon: Building2, section: null },
+      { title: "Agents", href: "/admin/agents", icon: Users2, section: null },
+      { title: "Student RAW DATA", href: "/admin/raw-data", icon: Upload, section: null },
+      { title: "Payments", href: "/admin/payments", icon: IndianRupee, section: null },
+      { title: "Website Leads (legacy)", href: "/admin/website-leads", icon: MousePointerClick, section: null },
+      { title: "Applications Pipeline", href: "/admin/dashboard?section=applications", icon: FileStack, section: "applications" },
+      { title: "Gallery", href: "/admin/gallery", icon: Images, section: null },
+    ],
+  },
 ];
 
 interface AdminSidebarProps {
@@ -62,24 +77,35 @@ export function AdminSidebar({ open, onToggle }: AdminSidebarProps) {
       </div>
 
       <nav className={cn("flex-1 space-y-1 overflow-y-auto py-4", open ? "px-3" : "px-2")}>
-        {navItems.map((item) => {
-          const active = item.section === null ? pathname === item.href && !section : section === item.section;
-          return (
-            <Link
-              key={item.title}
-              href={item.href}
-              title={item.title}
-              className={cn(
-                "flex items-center gap-3 rounded-md py-2.5 text-sm font-medium transition-colors",
-                open ? "px-3" : "justify-center px-0",
-                active ? "bg-gold-500 text-brand-950 shadow-md shadow-gold-500/20" : "text-white/70 hover:bg-white/10 hover:text-white"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5 shrink-0", active ? "text-brand-950" : "text-gold-400")} />
-              {open && item.title}
-            </Link>
-          );
-        })}
+        {navGroups.map((group) => (
+          <div key={group.section} className="space-y-1">
+            {open && (
+              <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+                {group.section}
+              </p>
+            )}
+            {group.items.map((item) => {
+              const active = item.section === null
+                ? pathname === (item.href.split("?")[0])
+                : section === item.section;
+              return (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  title={item.title}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md py-2.5 text-sm font-medium transition-colors",
+                    open ? "px-3" : "justify-center px-0",
+                    active ? "bg-gold-500 text-brand-950 shadow-md shadow-gold-500/20" : "text-white/70 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  <item.icon className={cn("h-5 w-5 shrink-0", active ? "text-brand-950" : "text-gold-400")} />
+                  {open && item.title}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
         <div className="my-4 h-px bg-white/10" />
         <Link
           href="/"

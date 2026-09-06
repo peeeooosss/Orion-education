@@ -3,24 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, FileStack, Building2, BookOpen, Database, Globe2, LogOut } from "lucide-react";
+import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { useRouter } from "next/navigation";
 
 const leadNavItems = [
-  { title: "Telecaller Dashboard", href: "/agent/dashboard", icon: LayoutDashboard },
-  { title: "New Leads", href: "/agent/dashboard?filter=new", icon: PhoneCall },
+  { title: "New Leads", href: "/agent/dashboard", icon: PhoneCall },
   { title: "Hot Leads", href: "/agent/dashboard?filter=hot", icon: Flame },
   { title: "Follow-ups", href: "/agent/follow-ups", icon: FileCheck2 },
-];
-
-const knowledgeNavItems = [
-  { title: "Imported Students", href: "/agent/raw-data", icon: Database },
-  { title: "Website Leads", href: "/agent/website-leads", icon: Globe2 },
-  { title: "Applications", href: "/agent/applications", icon: FileStack },
-  { title: "University Directory", href: "/agent/universities", icon: Building2 },
-  { title: "Program List", href: "/agent/programs", icon: BookOpen },
 ];
 
 interface AgentSidebarProps {
@@ -78,26 +69,6 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
           <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/40">Pipeline</p>
           {leadNavItems.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.title}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                  active ? "bg-gold-500 text-brand-950 shadow-md shadow-gold-500/20" : "text-white/70 hover:bg-white/10 hover:text-white"
-                )}
-              >
-                <item.icon className={cn("h-5 w-5 shrink-0", active ? "text-brand-950" : "text-gold-400")} strokeWidth={1.5} />
-                {item.title}
-              </Link>
-            );
-          })}
-
-          <div className="my-4 h-px bg-white/10" />
-
-          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/40">Everything in one place</p>
-          {knowledgeNavItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link

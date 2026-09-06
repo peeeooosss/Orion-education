@@ -15,15 +15,27 @@ export async function GET(
 
   const { id } = await params;
 
+  // Agents may only read leads assigned to them.
+  if (session.role === "agent") {
+    const ownership = await db.select({ agentId: leads.agentId }).from(leads).where(eq(leads.id, id)).limit(1);
+    if (!ownership[0] || ownership[0].agentId !== session.userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   const result = await db
     .select({
       id: leads.id,
       stage: leads.stage,
       source: leads.source,
       leadType: leads.leadType,
+      leadCategory: leads.leadCategory,
+      assignmentStatus: leads.assignmentStatus,
+      collegeId: leads.collegeId,
       lookingFor: leads.lookingFor,
       targetCollege: leads.targetCollege,
       targetProgram: leads.targetProgram,
+      admissionTimeline: leads.admissionTimeline,
       scholarshipAmount: leads.scholarshipAmount,
       scholarshipApplied: leads.scholarshipApplied,
       paymentStatus: leads.paymentStatus,
@@ -38,10 +50,15 @@ export async function GET(
       callConnected: leads.callConnected,
       lastCalledAt: leads.lastCalledAt,
       nextFollowUpAt: leads.nextFollowUpAt,
+      studyCountry: leads.studyCountry,
+      studyLevel: leads.studyLevel,
+      studyField: leads.studyField,
       createdAt: leads.createdAt,
       updatedAt: leads.updatedAt,
       rawStudentId: leads.rawStudentId,
       assignmentNote: leads.assignmentNote,
+      assignedBy: leads.assignedBy,
+      assignedAt: leads.assignedAt,
       questionnaire: leads.questionnaire,
       // Contact
       contactId: contacts.id,
@@ -109,6 +126,14 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
+
+  // Agents may only mutate leads assigned to them.
+  if (session.role === "agent") {
+    const ownership = await db.select({ agentId: leads.agentId }).from(leads).where(eq(leads.id, id)).limit(1);
+    if (!ownership[0] || ownership[0].agentId !== session.userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
 
   // Fields that can be updated
   const allowed = [

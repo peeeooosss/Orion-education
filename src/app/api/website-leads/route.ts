@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
-import { websiteLeads, colleges } from "@/server/db/schema";
+import { websiteLeads, colleges, leadActivities } from "@/server/db/schema";
 import { getSessionFromCookie } from "@/server/auth";
 import { nanoid } from "nanoid";
 import { eq, sql } from "drizzle-orm";
+import { createLead, findOrCreateContact, resolveLeadCategory } from "@/lib/leads";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookie();
@@ -64,9 +65,58 @@ export async function POST(req: NextRequest) {
       .from(colleges)
       .where(eq(colleges.id, collegeId))
       .limit(1);
-    resolvedCollegeId = match[0]?.id ?? null;
+    resolvedCollegeId = match[0]?.id ?? (collegeId.startsWith("college-") ? collegeId : null);
   }
 
+  // Map tracking source to canonical CRM lead fields
+  let leadSource: string;
+  if (effectiveSource === "study-abroad") {
+    leadSource = "Study Abroad";
+  } else if (effectiveSource === "free-enquiry") {
+    leadSource = "Free Enquiry";
+  } else {
+    leadSource = "Website Visit";
+  }
+
+  let leadType: string;
+  if (effectiveSource === "study-abroad") leadType = "website";
+  else if (effectiveSource === "free-enquiry") leadType = "website";
+  else leadType = "enquiry";
+
+  const leadCategory = resolveLeadCategory(leadSource);
+
+  // Create a canonical, unassigned CRM lead. Admin assigns every lead.
+  const contactId = await findOrCreateContact({
+    name,
+    phone,
+    email: email || null,
+  });
+
+  const targetProgram = program?.trim() || null;
+  const leadId = await createLead({
+    contactId,
+    source: leadSource,
+    leadType,
+    leadCategory,
+    agentId: null,
+    assignedBy: null,
+    assignmentNote: `Captured via ${leadSource}. Awaiting admin assignment.`,
+    lookingFor:
+      [targetProgram, admissionTimeline].filter(Boolean).join(" · ") ||
+      (effectiveSource === "study-abroad"
+        ? `Study Abroad${country ? ` · ${country}` : ""}${level ? ` · ${level}` : ""}`
+        : "Admission counselling"),
+    targetCollege: collegeName?.trim() || null,
+    targetProgram,
+    admissionTimeline: admissionTimeline || null,
+    collegeId: resolvedCollegeId,
+    studyCountry: effectiveSource === "study-abroad" ? (country || null) : null,
+    studyLevel: effectiveSource === "study-abroad" ? (level || null) : null,
+    studyField: effectiveSource === "study-abroad" ? (field || null) : null,
+    sourceForm: effectiveSource === "study-abroad" ? "study-abroad" : effectiveSource === "free-enquiry" ? "free-enquiry" : "visit-website",
+  });
+
+  // Keep the tracking row (legacy analytics source)
   const record = await db.insert(websiteLeads).values({
     id: `wvl-${nanoid(12)}`,
     name: name.trim(),
@@ -74,12 +124,25 @@ export async function POST(req: NextRequest) {
     email: email?.trim() || null,
     collegeId: resolvedCollegeId,
     collegeName: collegeName?.trim() || null,
-    program: program?.trim() || null,
+    program: targetProgram,
     admissionTimeline: admissionTimeline || null,
     sourceWebsite: sourceWebsite || null,
     userId: userId || null,
     source: effectiveSource,
+    assignedAgent: null,
+    leadId,
+    status: "Unassigned",
   }).returning();
 
-  return NextResponse.json({ lead: record[0] });
+  await db.insert(leadActivities).values({
+    id: `act-${nanoid(12)}`,
+    leadId,
+    agentId: null,
+    kind: "status_change",
+    note: `Lead created via ${leadSource}. Awaiting admin assignment.`,
+    oldStage: null,
+    newStage: "New",
+  });
+
+  return NextResponse.json({ lead: record[0], leadId });
 }

@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
       leadSource: leads.source,
       leadStage: leads.stage,
       leadType: leads.leadType,
+      leadCategory: leads.leadCategory,
     })
     .from(followUps)
     .leftJoin(leads, eq(followUps.leadId, leads.id))

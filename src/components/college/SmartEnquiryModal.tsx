@@ -109,8 +109,8 @@ export function SmartEnquiryModal({ college, open, onOpenChange }: SmartEnquiryM
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold text-surface-900">Free counselling — {college.shortName}</DialogTitle>
-              <DialogDescription className="text-sm text-surface-600">Send your intent directly to a telecaller who has your opening script ready.</DialogDescription>
+              <DialogTitle className="text-lg font-bold text-surface-900">Apply to {college.shortName}</DialogTitle>
+              <DialogDescription className="text-sm text-surface-600">Submit your application request — our counsellor will reach out with next steps.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
@@ -171,7 +171,7 @@ export function SmartEnquiryModal({ college, open, onOpenChange }: SmartEnquiryM
               )}
 
               <Button variant="gold" className="h-12 w-full" disabled={!name.trim() || phone.trim().length < 10 || loading} onClick={handleSubmit}>
-                <Sparkles className="h-4 w-4" /> {loading ? "Sending..." : "Submit enquiry"}
+                <Sparkles className="h-4 w-4" /> {loading ? "Submitting…" : "Apply Now"}
               </Button>
               <p className="flex items-center justify-center gap-1.5 text-[11px] text-surface-500"><BadgeCheck className="h-3.5 w-3.5 text-gold-700" /> Free enquiry — no payment required</p>
             </div>

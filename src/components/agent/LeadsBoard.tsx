@@ -39,23 +39,24 @@ import { StartApplicationModal } from "./StartApplicationModal";
 const STATUSES: Lead["status"][] = [...LEAD_STATUSES];
 const CALL_STATUS_OPTIONS: CallStatus[] = ["Not Called", "Connected", "No Answer", "Busy", "Call Back Requested", "WhatsApp Sent", "Wrong Number", "Do Not Call"];
 
-const leadTypeMeta: Record<LeadType, { label: string; badge: string }> = {
-  scholarship: { label: "Scholarship", badge: "bg-gold-100 text-gold-700" },
-  enquiry: { label: "Enquiry", badge: "bg-blue-100 text-blue-700" },
-  raw: { label: "Raw cold-call", badge: "bg-slate-200 text-slate-700" },
-  website: { label: "Website", badge: "bg-teal-100 text-teal-700" },
+const CATEGORY_META: Record<string, { label: string; badge: string }> = {
+  general: { label: "Free Enquiry", badge: "bg-gold-100 text-gold-700" },
+  college_specific: { label: "College-Specific", badge: "bg-blue-100 text-blue-700" },
+  study_abroad: { label: "Study Abroad", badge: "bg-indigo-100 text-indigo-700" },
+  imported: { label: "Imported Student", badge: "bg-slate-200 text-slate-700" },
 };
 
-const TYPE_FILTERS: { key: "all" | LeadType; label: string }[] = [
+const TYPE_FILTERS: { key: "all" | string; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "scholarship", label: "Scholarship" },
-  { key: "enquiry", label: "Enquiry only" },
-  { key: "website", label: "Website" },
-  { key: "raw", label: "Raw cold-call" },
+  { key: "general", label: "Free Enquiry" },
+  { key: "college_specific", label: "College-Specific" },
+  { key: "study_abroad", label: "Study Abroad" },
+  { key: "imported", label: "Imported Students" },
 ];
 
-function LeadTypeBadge({ type }: { type: LeadType }) {
-  return <Badge className={leadTypeMeta[type].badge}>{leadTypeMeta[type].label}</Badge>;
+function LeadTypeBadge({ category }: { category: string }) {
+  const meta = CATEGORY_META[category] ?? { label: category, badge: "bg-slate-100 text-slate-600" };
+  return <Badge className={meta.badge}>{meta.label}</Badge>;
 }
 
 function ScholarshipCell({ lead, onPush }: { lead: Lead; onPush: (lead: Lead) => void }) {
@@ -158,7 +159,7 @@ function LeadTable({
                     </button>
                   </td>
                   <td className="p-3.5">
-                    <LeadTypeBadge type={lead.leadType} />
+                    <LeadTypeBadge category={lead.leadCategory ?? lead.leadType} />
                   </td>
                   <td className="p-3.5">
                     <Badge className={intentColors[lead.intentLevel]}>{lead.intentLevel}</Badge>
@@ -268,7 +269,7 @@ function KanbanCard({
         <Badge className={intentColors[lead.intentLevel]}>{lead.intentLevel}</Badge>
       </div>
       <div className="mt-2 flex items-center gap-2">
-        <LeadTypeBadge type={lead.leadType} />
+        <LeadTypeBadge category={lead.leadCategory ?? lead.leadType} />
       </div>
       <p className="mt-2.5 text-xs text-slate-600">{lead.targetCollege}</p>
       <p className="text-xs text-slate-500">Wants: {lead.lookingFor}</p>
@@ -392,7 +393,7 @@ export function LeadsBoard() {
   const clearLastAdded = useAppStore((s) => s.clearLastAddedLead);
 
   const [view, setView] = React.useState<"table" | "kanban">("table");
-  const [typeFilter, setTypeFilter] = React.useState<"all" | LeadType>("all");
+  const [typeFilter, setTypeFilter] = React.useState<"all" | string>("all");
   const [selectedLead, setSelectedLead] = React.useState<Lead | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [applyLead, setApplyLead] = React.useState<Lead | null>(null);
@@ -404,7 +405,9 @@ export function LeadsBoard() {
     let cancelled = false;
     async function fetchLeads() {
       try {
-        const res = await fetch("/api/leads?sort=smart");
+        const query = new URLSearchParams({ sort: "smart" });
+        if (typeFilter !== "all") query.set("category", typeFilter);
+        const res = await fetch(`/api/leads?${query.toString()}`);
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
@@ -429,6 +432,7 @@ export function LeadsBoard() {
           intentReasons: (r.intentReasons as string[]) ?? [],
           leadType: (r.leadType as LeadType) ?? "enquiry",
           scholarshipApplied: Boolean(r.scholarshipApplied),
+          leadCategory: (r.leadCategory as string) ?? "general",
         }));
         setLeads(mapped);
       } catch {
@@ -439,7 +443,7 @@ export function LeadsBoard() {
     }
     fetchLeads();
     return () => { cancelled = true; };
-  }, []);
+  }, [typeFilter]);
 
   async function updateLeadStatus(id: string, status: Lead["status"]) {
     setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
@@ -466,7 +470,7 @@ export function LeadsBoard() {
     if (filter === "new") result = result.filter((l) => l.status === "New");
     if (filter === "hot") result = result.filter((l) => l.intentLevel === "Hot");
     if (filter === "contacted") result = result.filter((l) => l.status === "Contacted" || l.callConnected);
-    if (typeFilter !== "all") result = result.filter((l) => l.leadType === typeFilter);
+    if (typeFilter !== "all") result = result.filter((l) => l.leadCategory === typeFilter);
     return result;
   }, [leads, filter, typeFilter]);
 
@@ -514,9 +518,11 @@ export function LeadsBoard() {
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h1 className="text-2xl font-bold text-brand-950">Incoming leads</h1>
+          <h1 className="text-2xl font-bold text-brand-950">
+            {filter === "hot" ? "Hot Leads" : "New Leads"}
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
-            {loading ? "Loading leads from database..." : filter === "new" ? "Only brand-new leads — call them first." : filter === "hot" ? "Hot intent, high scholarship — your best conversions." : "Every enquiry routed from the student site, live."}
+            {loading ? "Loading leads from database..." : filter === "new" ? "Leads in the New stage — call them first." : filter === "hot" ? "Hot intent, high scholarship — your best conversions." : "Leads assigned to you by your admin. Call, update status, and set follow-ups."}
           </p>
         </div>
         <div className="flex items-center gap-2">
