@@ -92,7 +92,7 @@ export function LeadDetailModal({
                 <p className="text-base font-bold text-brand-950">{lead.name}</p>
                 <Badge className={intentColors[lead.intentLevel]}>{lead.intentLevel} intent</Badge>
                 <Badge className={leadTypeBadge[lead.leadCategory || lead.leadType]?.cls ?? "bg-slate-100 text-slate-600"}>
-                  {leadTypeBadge[lead.leadCategory || lead.leadType]?.label ?? lead.leadCategory || lead.leadType}
+                  {(leadTypeBadge[lead.leadCategory || lead.leadType]?.label ?? (lead.leadCategory || lead.leadType))}
                 </Badge>
                 {lead.intentOverride && <Badge className="bg-brand-100 text-brand-700">Agent override</Badge>}
                 {lead.callConnected && (
