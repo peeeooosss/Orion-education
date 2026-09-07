@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
         applicationId: appId,
         name: d.name,
         required: d.required,
-        done: d.done,
+        done: false,
       }))
     );
 
