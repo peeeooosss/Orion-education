@@ -38,6 +38,7 @@ import type {
   WebsiteVisitLead,
 } from "./types";
 import { MBA_PGDM_COLLEGES } from "@/data/college-directory";
+import { DOC_TEMPLATE, STAGE_TO_LEAD_STATUS } from "@/lib/application";
 
 function leadTypeFromSource(source: Lead["source"]): LeadType {
   if (source === "Scholarship Checker") return "scholarship";
@@ -56,26 +57,9 @@ export function formatINR(n: number): string {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-const DOC_TEMPLATE: Omit<ApplicationDoc, "done">[] = [
-  { id: "d1", name: "Class 10 Marksheet", required: true },
-  { id: "d2", name: "Class 12 Marksheet", required: true },
-  { id: "d3", name: "Transfer Certificate", required: true },
-  { id: "d4", name: "ID / Aadhaar Proof", required: true },
-  { id: "d5", name: "Passport Photos", required: true },
-  { id: "d6", name: "Entrance Exam Scorecard", required: true },
-  { id: "d7", name: "Caste / Income Certificate (if applicable)", required: false },
-];
-
 function freshDocs(): ApplicationDoc[] {
   return DOC_TEMPLATE.map((d) => ({ ...d, done: false }));
 }
-
-const STAGE_TO_LEAD_STATUS: Record<ApplicationStage, Lead["status"]> = {
-  "Docs Pending": "Application Started",
-  Submitted: "Application Started",
-  "Offer Received": "Offer Received",
-  Admitted: "Admitted",
-};
 
 interface StartApplicationInput {
   leadId: string;

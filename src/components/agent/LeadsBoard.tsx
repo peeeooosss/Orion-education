@@ -97,13 +97,14 @@ function getInitials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
-function waTextFor(lead: Lead) {
-  return `Hi ${lead.name}! This is Rohit from Orion Education. You've unlocked ${formatINR(lead.scholarshipUnlocked)} towards ${lead.targetCollege}. Can I help you with ${lead.lookingFor.toLowerCase()}?`;
+function waTextFor(lead: Lead, agentName: string) {
+  return `Hi ${lead.name}! This is ${agentName} from Orion Education. You've unlocked ${formatINR(lead.scholarshipUnlocked)} towards ${lead.targetCollege}. Can I help you with ${lead.lookingFor.toLowerCase()}?`;
 }
 
 function LeadTable({
   leads,
   lastAddedId,
+  agentName,
   onOpen,
   onStartApplication,
   onPush,
@@ -112,6 +113,7 @@ function LeadTable({
 }: {
   leads: Lead[];
   lastAddedId: string | null;
+  agentName: string;
   onOpen: (lead: Lead) => void;
   onStartApplication: (lead: Lead) => void;
   onPush: (lead: Lead) => void;
@@ -201,7 +203,7 @@ function LeadTable({
                           <PhoneCall className="h-3.5 w-3.5" />
                         </Button>
                       </a>
-                      <a href={waLink(lead.phone, waTextFor(lead))} target="_blank" rel="noreferrer">
+                      <a href={waLink(lead.phone, waTextFor(lead, agentName))} target="_blank" rel="noreferrer">
                         <Button variant="outline" size="icon" className="h-8 w-8 border-green-600 text-green-600 hover:bg-green-600 hover:text-white" aria-label="WhatsApp">
                           <MessageCircle className="h-3.5 w-3.5" />
                         </Button>
@@ -233,6 +235,7 @@ function LeadTable({
 function KanbanCard({
   lead,
   isNew,
+  agentName,
   onOpen,
   onStartApplication,
   onPush,
@@ -240,6 +243,7 @@ function KanbanCard({
 }: {
   lead: Lead;
   isNew: boolean;
+  agentName: string;
   onOpen: (lead: Lead) => void;
   onStartApplication: (lead: Lead) => void;
   onPush: (lead: Lead) => void;
@@ -292,7 +296,7 @@ function KanbanCard({
               <PhoneCall className="h-3 w-3" />
             </span>
           </a>
-          <a href={waLink(lead.phone, waTextFor(lead))} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+          <a href={waLink(lead.phone, waTextFor(lead, agentName))} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
             <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-green-600 text-green-600 hover:bg-green-600 hover:text-white">
               <MessageCircle className="h-3 w-3" />
             </span>
@@ -324,6 +328,7 @@ function KanbanCard({
 function LeadKanban({
   leads,
   lastAddedId,
+  agentName,
   onOpen,
   onStartApplication,
   onPush,
@@ -332,6 +337,7 @@ function LeadKanban({
 }: {
   leads: Lead[];
   lastAddedId: string | null;
+  agentName: string;
   onOpen: (lead: Lead) => void;
   onStartApplication: (lead: Lead) => void;
   onPush: (lead: Lead) => void;
@@ -368,7 +374,7 @@ function LeadKanban({
                             {...dragProvided.dragHandleProps}
                             className={snapshot.isDragging ? "rotate-1 shadow-xl" : ""}
                           >
-                            <KanbanCard lead={lead} isNew={lead.id === lastAddedId} onOpen={onOpen} onStartApplication={onStartApplication} onPush={onPush} onMarkCallConnected={onMarkCallConnected} />
+                            <KanbanCard lead={lead} isNew={lead.id === lastAddedId} agentName={agentName} onOpen={onOpen} onStartApplication={onStartApplication} onPush={onPush} onMarkCallConnected={onMarkCallConnected} />
                           </div>
                         )}
                       </Draggable>
@@ -391,6 +397,8 @@ export function LeadsBoard() {
   const [loading, setLoading] = React.useState(true);
   const lastAddedId = useAppStore((s) => s.lastAddedLeadId);
   const clearLastAdded = useAppStore((s) => s.clearLastAddedLead);
+  const authUser = useAppStore((s) => s.authUser);
+  const agentName = authUser?.name || "Agent";
 
   const [view, setView] = React.useState<"table" | "kanban">("table");
   const [typeFilter, setTypeFilter] = React.useState<"all" | string>("all");
@@ -450,7 +458,7 @@ export function LeadsBoard() {
     try { await fetch("/api/leads", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, stage: status }) }); } catch { /* optimistic */ }
   }
 
-  async function updateLeadEngagement(id: string, patch: Partial<Pick<Lead, "callStatus" | "interestStatus">>) {
+  async function updateLeadEngagement(id: string, patch: Partial<Pick<Lead, "callStatus" | "interestStatus" | "nextAction" | "nextFollowUpAt" | "lastCalledAt">>) {
     setLeads((prev) => prev.map((l) => l.id === id ? { ...l, ...patch } : l));
     try { await fetch("/api/leads", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...patch }) }); } catch { /* optimistic */ }
   }
@@ -607,12 +615,21 @@ export function LeadsBoard() {
           <p className="text-xs text-slate-500">Submit an enquiry on the student site and it will appear here instantly.</p>
         </div>
       ) : view === "table" ? (
-        <LeadTable leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} onUpdateStatus={updateLeadStatus} onUpdateEngagement={updateLeadEngagement} />
+        <LeadTable leads={filtered} lastAddedId={lastAddedId} agentName={agentName} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} onUpdateStatus={updateLeadStatus} onUpdateEngagement={updateLeadEngagement} />
       ) : (
-        <LeadKanban leads={filtered} lastAddedId={lastAddedId} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} onDragEnd={handleDragEnd} onMarkCallConnected={markCallConnected} />
+        <LeadKanban leads={filtered} lastAddedId={lastAddedId} agentName={agentName} onOpen={openLead} onStartApplication={startApplication} onPush={pushToScholarship} onDragEnd={handleDragEnd} onMarkCallConnected={markCallConnected} />
       )}
 
-      <LeadDetailModal lead={selectedLead} open={modalOpen} onOpenChange={setModalOpen} onStartApplication={startApplication} />
+      <LeadDetailModal
+        lead={selectedLead}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onStartApplication={startApplication}
+        onUpdateStatus={updateLeadStatus}
+        onUpdateEngagement={updateLeadEngagement}
+        onMarkCallConnected={markCallConnected}
+        onMarkScholarshipApplied={markScholarshipApplied}
+      />
       <StartApplicationModal
         open={applyOpen}
         onOpenChange={setApplyOpen}

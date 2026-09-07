@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { UniversityDirectory } from "@/components/agent/UniversityDirectory";
 
-export default function RedirectPage() {
-  redirect("/agent/dashboard");
+export default function AgentUniversitiesPage() {
+  return <UniversityDirectory />;
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   CheckCircle2,
   FileStack,
+  MessageCircle,
   Search,
   TicketPercent,
   User,
@@ -21,7 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatINR, useAppStore } from "@/store/useAppStore";
-import type { Application, College, Lead } from "@/store/types";
+import { waLink } from "@/lib/wa";
+import { mapApplicationDetail } from "@/lib/application";
+import type { Application, College, Lead, LeadType } from "@/store/types";
 
 interface StartApplicationModalProps {
   open: boolean;
@@ -32,12 +35,34 @@ interface StartApplicationModalProps {
   onCreated?: (app: Application) => void;
 }
 
+function mapLeadRow(r: Record<string, unknown>): Lead {
+  return {
+    id: r.id as string,
+    name: (r.contactName as string) ?? "Unknown",
+    phone: (r.contactPhone as string) ?? "",
+    email: (r.contactEmail as string) ?? "",
+    intentLevel: (r.intentLevel as Lead["intentLevel"]) ?? "Cold",
+    scholarshipUnlocked: Number(r.scholarshipAmount ?? 0),
+    lookingFor: (r.lookingFor as string) ?? "",
+    targetCollege: (r.targetCollege as string) ?? "",
+    status: (r.stage as Lead["status"]) ?? "New",
+    callConnected: Boolean(r.callConnected),
+    source: (r.source as Lead["source"]) ?? "Free Enquiry",
+    createdAt: (r.createdAt as string) ?? new Date().toISOString(),
+    agent: "",
+    leadType: (r.leadType as LeadType) ?? "website",
+    scholarshipApplied: Boolean(r.scholarshipApplied),
+  };
+}
+
 function LeadPicker({
   leads,
+  loading,
   selected,
   onSelect,
 }: {
   leads: Lead[];
+  loading: boolean;
   selected: Lead | null;
   onSelect: (lead: Lead) => void;
 }) {
@@ -57,7 +82,7 @@ function LeadPicker({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
-          placeholder="Search lead by name, phone, college..."
+          placeholder={loading ? "Loading assigned students..." : "Search assigned student by name, phone, college..."}
           value={selected ? selected.name : query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -80,8 +105,10 @@ function LeadPicker({
       </div>
       {show && !selected && (
         <div className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
-          {filtered.length === 0 ? (
-            <p className="px-3 py-3 text-sm text-slate-500">No leads found.</p>
+          {loading ? (
+            <p className="px-3 py-3 text-sm text-slate-500">Loading assigned students...</p>
+          ) : filtered.length === 0 ? (
+            <p className="px-3 py-3 text-sm text-slate-500">No assigned students found.</p>
           ) : (
             filtered.map((l) => (
               <button
@@ -191,8 +218,13 @@ function CollegePicker({
   );
 }
 
+function mapCreatedApplication(data: Record<string, unknown>): Application {
+  return mapApplicationDetail(data);
+}
+
 function StartApplicationForm({
   leads,
+  leadsLoading,
   colleges,
   preselectedLeadId,
   preselectedCollegeId,
@@ -201,6 +233,7 @@ function StartApplicationForm({
   onCancel,
 }: {
   leads: Lead[];
+  leadsLoading: boolean;
   colleges: College[];
   preselectedLeadId?: string | null;
   preselectedCollegeId?: string | null;
@@ -208,7 +241,6 @@ function StartApplicationForm({
   onDone: (app: Application) => void;
   onCancel: () => void;
 }) {
-  const startApplication = useAppStore((s) => s.startApplication);
   const [lead, setLead] = useState<Lead | null>(
     leads.find((l) => l.id === preselectedLeadId) ?? null
   );
@@ -219,21 +251,42 @@ function StartApplicationForm({
   const [notes, setNotes] = useState("");
   const [created, setCreated] = useState<Application | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = !!lead && !!college && !!program;
+  useEffect(() => {
+    if (preselectedLeadId && !lead) {
+      const match = leads.find((l) => l.id === preselectedLeadId);
+      if (match) setLead(match);
+    }
+  }, [leads, preselectedLeadId, lead]);
 
-  function handleSubmit(e: React.FormEvent) {
+  const canSubmit = !!lead && !!college && !!program && !submitting;
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!lead || !college || !program) return;
     setError(null);
-    const app = startApplication({
-      leadId: lead.id,
-      collegeId: college.id,
-      program,
-      notes: notes.trim() || undefined,
-    });
-    if (app) setCreated(app);
-    else setError("Could not create the application. Try again.");
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: lead.id,
+          collegeId: college.id,
+          collegeName: college.name,
+          program,
+          notes: notes.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not create the application");
+      setCreated(mapCreatedApplication(data));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create the application. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (created) {
@@ -254,6 +307,15 @@ function StartApplicationForm({
           Track documents & stage in the Applications tab.
         </p>
         <div className="mt-6 flex justify-center gap-3">
+          <a
+            href={waLink(created.phone, `Hi ${created.studentName}! Your application for ${created.program} at ${created.collegeName} has been started. Please share the documents listed for it.`)}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Button className="bg-green-600 text-white hover:bg-green-700">
+              <MessageCircle className="h-4 w-4" /> WhatsApp student
+            </Button>
+          </a>
           <Button variant="outline" onClick={() => onDone(created)}>Done</Button>
         </div>
       </div>
@@ -274,7 +336,12 @@ function StartApplicationForm({
           <Label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <User className="h-3.5 w-3.5" /> Student / Lead
           </Label>
-          <LeadPicker leads={leads} selected={lead} onSelect={setLead} />
+          <LeadPicker leads={leads} loading={leadsLoading} selected={lead} onSelect={setLead} />
+          {!leadsLoading && leads.length === 0 && (
+            <p className="text-xs text-amber-600">
+              No students are assigned to you yet — ask admin to assign leads first.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -349,7 +416,7 @@ function StartApplicationForm({
           <ArrowLeft className="h-4 w-4" /> Cancel
         </Button>
         <Button type="submit" variant="gold" disabled={!canSubmit}>
-          Start Application <ArrowRight className="h-4 w-4" />
+          {submitting ? "Creating..." : "Start Application"} <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
     </form>
@@ -364,8 +431,30 @@ export function StartApplicationModal({
   preselectedProgram,
   onCreated,
 }: StartApplicationModalProps) {
-  const leads = useAppStore((s) => s.leads);
   const colleges = useAppStore((s) => s.colleges);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLeadsLoading(true);
+    (async () => {
+      try {
+        const res = await fetch("/api/leads?sort=smart");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setLeads((data.leads ?? []).map(mapLeadRow));
+      } catch {
+        // silent
+      } finally {
+        if (!cancelled) setLeadsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -373,6 +462,7 @@ export function StartApplicationModal({
         {open && (
           <StartApplicationForm
             leads={leads}
+            leadsLoading={leadsLoading}
             colleges={colleges}
             preselectedLeadId={preselectedLeadId}
             preselectedCollegeId={preselectedCollegeId}

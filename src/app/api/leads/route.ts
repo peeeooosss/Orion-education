@@ -173,6 +173,7 @@ export async function PATCH(req: NextRequest) {
     const allowed = [
       "stage", "callStatus", "interestStatus", "callConnected",
       "scholarshipApplied", "leadType", "lookingFor", "targetCollege", "targetProgram",
+      "nextAction", "nextFollowUpAt", "lastCalledAt",
     ];
 
     const patch: Record<string, unknown> = {};

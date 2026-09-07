@@ -29,10 +29,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { generateOpeningScript, LEAD_STATUSES } from "@/lib/scholarship";
-import { telLink, waLink } from "@/lib/wa";
+import { telLink } from "@/lib/wa";
 import { formatINR, useAppStore } from "@/store/useAppStore";
 import type { Lead } from "@/store/types";
 import { EngagementControls } from "./EngagementControls";
+import { WhatsAppTemplates } from "./WhatsAppTemplates";
 
 const intentColors: Record<string, string> = {
   Hot: "bg-red-100 text-red-700",
@@ -47,37 +48,43 @@ const leadTypeBadge: Record<string, { label: string; cls: string }> = {
   imported: { label: "Imported Student", cls: "bg-slate-200 text-slate-700" },
 };
 
+interface LeadDetailModalProps {
+  lead: Lead | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onStartApplication?: (lead: Lead) => void;
+  onUpdateStatus?: (id: string, status: Lead["status"]) => void;
+  onUpdateEngagement?: (id: string, patch: Partial<Pick<Lead, "callStatus" | "interestStatus" | "nextAction" | "nextFollowUpAt" | "lastCalledAt">>) => void;
+  onMarkCallConnected?: (id: string) => void;
+  onMarkScholarshipApplied?: (id: string) => void;
+}
+
 export function LeadDetailModal({
   lead,
   open,
   onOpenChange,
   onStartApplication,
-}: {
-  lead: Lead | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onStartApplication?: (lead: Lead) => void;
-}) {
-  const updateLeadStatus = useAppStore((s) => s.updateLeadStatus);
-  const markCallConnected = useAppStore((s) => s.markCallConnected);
-  const markScholarshipApplied = useAppStore((s) => s.markScholarshipApplied);
+  onUpdateStatus,
+  onUpdateEngagement,
+  onMarkCallConnected,
+  onMarkScholarshipApplied,
+}: LeadDetailModalProps) {
+  const authUser = useAppStore((s) => s.authUser);
+  const waSectionRef = React.useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
-  const [copiedWa, setCopiedWa] = useState(false);
 
   if (!lead) return null;
+
+  const agentName = authUser?.name || "Agent";
 
   const script = generateOpeningScript({
     name: lead.name,
     scholarshipUnlocked: lead.scholarshipUnlocked,
     targetCollege: lead.targetCollege,
     lookingFor: lead.lookingFor,
-    agentName: "Rohit",
+    agentName,
     scholarshipApplied: lead.scholarshipApplied,
   });
-
-  const waText = lead.scholarshipApplied
-    ? `Hi ${lead.name}! This is Rohit from Orion Education. I can see you've unlocked ${formatINR(lead.scholarshipUnlocked)} towards ${lead.targetCollege}. Shall I help you with ${lead.lookingFor.toLowerCase()}?`
-    : `Hi ${lead.name}! This is Rohit from Orion Education. Thanks for your enquiry about ${lead.targetCollege}. Shall I help you with ${lead.lookingFor.toLowerCase()}?`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -118,7 +125,7 @@ export function LeadDetailModal({
               <p className="mt-1 text-[10px] text-white/50">{lead.scholarshipApplied ? "Assured · 48h validity" : "Estimated eligibility — not applied"}</p>
               {!lead.scholarshipApplied && (
                 <button
-                  onClick={() => markScholarshipApplied(lead.id)}
+                  onClick={() => onMarkScholarshipApplied?.(lead.id)}
                   className="mt-3 w-full rounded-lg bg-gold-500 px-3 py-2 text-xs font-bold text-brand-950 transition-colors hover:bg-gold-400"
                 >
                   <TicketPercent className="mr-1 inline h-3.5 w-3.5" /> Mark scholarship applied
@@ -171,65 +178,69 @@ export function LeadDetailModal({
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quick actions</p>
             <div className="grid gap-2 sm:grid-cols-3">
               <a href={telLink(lead.phone)} target="_blank" rel="noreferrer">
-                <Button variant="outline" className="w-full border-brand-950 text-brand-950 hover:bg-brand-950 hover:text-white" onClick={() => markCallConnected(lead.id)}>
+                <Button variant="outline" className="w-full border-brand-950 text-brand-950 hover:bg-brand-950 hover:text-white" onClick={() => onMarkCallConnected?.(lead.id)}>
                   <PhoneCall className="h-4 w-4" /> Call
                 </Button>
               </a>
-              <a href={waLink(lead.phone, waText)} target="_blank" rel="noreferrer">
-                <Button className="w-full bg-green-600 text-white hover:bg-green-700">
-                  <MessageCircle className="h-4 w-4" /> WhatsApp
-                </Button>
-              </a>
+              <Button className="w-full bg-green-600 text-white hover:bg-green-700" onClick={() => waSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })}>
+                <MessageCircle className="h-4 w-4" /> WhatsApp
+              </Button>
               <Button
                 variant="outline"
                 className="w-full border-gold-500 text-gold-600 hover:bg-gold-50"
                 onClick={() => {
-                  navigator.clipboard?.writeText(waText).catch(() => {});
-                  setCopiedWa(true);
-                  setTimeout(() => setCopiedWa(false), 1500);
+                  onOpenChange(false);
+                  onStartApplication?.(lead);
                 }}
               >
-                {copiedWa ? <Check className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                {copiedWa ? "Copied" : "Copy WA text"}
+                <Sparkles className="h-4 w-4" /> Start Application
               </Button>
             </div>
-
-            <Button
-              variant="gold"
-              className="w-full"
-              disabled={lead.status === "Admitted"}
-              onClick={() => {
-                onOpenChange(false);
-                onStartApplication?.(lead);
-              }}
-            >
-              <FileStack className="h-4 w-4" /> Start Application
-            </Button>
-
-            <div className="rounded-2xl border border-slate-200 p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-brand-950">Status</p>
-                  <p className="text-xs text-slate-500">Update where this lead stands</p>
-                </div>
-                <Select
-                  value={lead.status}
-                  onValueChange={(v) => updateLeadStatus(lead.id, v as Lead["status"])}
-                >
-                  <SelectTrigger className="w-full sm:w-56">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEAD_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <EngagementControls record={lead} kind="lead" />
           </div>
+
+          <div ref={waSectionRef} className="rounded-2xl border border-slate-200 p-4">
+            <WhatsAppTemplates lead={lead} agentName={agentName} />
+          </div>
+
+          <Button
+            variant="gold"
+            className="w-full"
+            disabled={lead.status === "Admitted"}
+            onClick={() => {
+              onOpenChange(false);
+              onStartApplication?.(lead);
+            }}
+          >
+            <FileStack className="h-4 w-4" /> Start Application
+          </Button>
+
+          <div className="rounded-2xl border border-slate-200 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-brand-950">Status</p>
+                <p className="text-xs text-slate-500">Update where this lead stands</p>
+              </div>
+              <Select
+                value={lead.status}
+                onValueChange={(v) => onUpdateStatus?.(lead.id, v as Lead["status"])}
+              >
+                <SelectTrigger className="w-full sm:w-56">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <EngagementControls
+            record={lead}
+            kind="lead"
+            onSaveLeadUpdate={(id, patch) => onUpdateEngagement?.(id, patch)}
+          />
         </div>
       </DialogContent>
     </Dialog>

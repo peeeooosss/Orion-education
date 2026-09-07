@@ -28,13 +28,14 @@ interface EngagementControlsProps {
   record: RawStudentRecord | Lead;
   kind: "raw" | "lead";
   onConvert?: () => void;
+  onSaveLeadUpdate?: (id: string, patch: Partial<Pick<Lead, "callStatus" | "interestStatus" | "nextAction" | "nextFollowUpAt" | "lastCalledAt">>) => void;
 }
 
 function isRaw(record: RawStudentRecord | Lead, kind: "raw" | "lead"): record is RawStudentRecord {
   return kind === "raw";
 }
 
-export function EngagementControls({ record, kind, onConvert }: EngagementControlsProps) {
+export function EngagementControls({ record, kind, onConvert, onSaveLeadUpdate }: EngagementControlsProps) {
   const updateRawStudent = useAppStore((s) => s.updateRawStudent);
   const updateLeadEngagement = useAppStore((s) => s.updateLeadEngagement);
   const [callStatus, setCallStatus] = useState<CallStatus>(record.callStatus ?? "Not Called");
@@ -86,6 +87,33 @@ export function EngagementControls({ record, kind, onConvert }: EngagementContro
           });
         } catch {
           // silent
+        }
+      }
+    } else if (onSaveLeadUpdate) {
+      onSaveLeadUpdate(record.id, {
+        callStatus,
+        interestStatus,
+        nextAction,
+        lastCalledAt: callStatus !== "Not Called" ? now : record.lastCalledAt,
+        nextFollowUpAt: followUpAt ? new Date(followUpAt).toISOString() : undefined,
+      });
+
+      // Create follow-up via API if date is set
+      if (followUpAt && record.id) {
+        try {
+          await fetch("/api/follow-ups", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              leadId: record.id,
+              dueAt: new Date(followUpAt).toISOString(),
+              followType: nextAction === "Start Application" ? "Counselling" : "Call",
+              priority: interestStatus === "Interested" || interestStatus === "Qualified" ? "Important" : "Normal",
+              note: nextAction,
+            }),
+          });
+        } catch {
+          // silent - follow-up creation is best-effort
         }
       }
     } else {

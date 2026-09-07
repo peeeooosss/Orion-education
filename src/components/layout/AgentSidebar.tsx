@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, Flame, PhoneCall, FileCheck2, ArrowLeft, Headset, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import { Flame, PhoneCall, FileCheck2, FileStack, Building2, BookOpen, ArrowLeft, Headset, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,12 @@ const leadNavItems = [
   { title: "New Leads", href: "/agent/dashboard", icon: PhoneCall },
   { title: "Hot Leads", href: "/agent/dashboard?filter=hot", icon: Flame },
   { title: "Follow-ups", href: "/agent/follow-ups", icon: FileCheck2 },
+];
+
+const resourceNavItems = [
+  { title: "Applications", href: "/agent/applications", icon: FileStack },
+  { title: "University Directory", href: "/agent/universities", icon: Building2 },
+  { title: "Program List", href: "/agent/programs", icon: BookOpen },
 ];
 
 interface AgentSidebarProps {
@@ -35,8 +41,8 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
       const f = href.split("filter=")[1];
       return pathname.startsWith("/agent/dashboard") && filter === f;
     }
-    if (href === "/agent/follow-ups") {
-      return pathname === "/agent/follow-ups";
+    if (href === "/agent/follow-ups" || href === "/agent/applications" || href === "/agent/universities" || href === "/agent/programs") {
+      return pathname === href;
     }
     return pathname === href && !filter;
   };
@@ -86,6 +92,24 @@ export function AgentSidebar({ open, onToggle }: AgentSidebarProps) {
           })}
 
           <div className="my-4 h-px bg-white/10" />
+
+          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-white/40">Resources</p>
+          {resourceNavItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.title}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                  active ? "bg-gold-500 text-brand-950 shadow-md shadow-gold-500/20" : "text-white/70 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 shrink-0", active ? "text-brand-950" : "text-gold-400")} strokeWidth={1.5} />
+                {item.title}
+              </Link>
+            );
+          })}
 
           <Link
             href="/"

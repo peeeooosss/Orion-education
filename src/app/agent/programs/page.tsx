@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { ProgramsDirectory } from "@/components/agent/ProgramsDirectory";
 
-export default function RedirectPage() {
-  redirect("/agent/dashboard");
+export default function AgentProgramsPage() {
+  return <ProgramsDirectory />;
 }

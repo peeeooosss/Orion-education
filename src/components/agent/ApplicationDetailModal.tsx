@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { formatINR, useAppStore } from "@/store/useAppStore";
+import { formatINR } from "@/store/useAppStore";
 import { timeAgo } from "@/lib/time";
 import type { Application, ApplicationStage } from "@/store/types";
 
@@ -38,31 +38,62 @@ const stageBadge: Record<ApplicationStage, string> = {
   Admitted: "bg-green-100 text-green-700",
 };
 
+interface ApplicationDetailModalProps {
+  application: Application | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  loading?: boolean;
+  saving?: boolean;
+  onStageChange?: (id: string, stage: ApplicationStage) => void;
+  onToggleDoc?: (applicationId: string, docId: string) => void;
+  onSaveNotes?: (applicationId: string, notes: string) => void;
+}
+
 export function ApplicationDetailModal({
   application,
   open,
   onOpenChange,
-}: {
-  application: Application | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+  loading,
+  saving,
+  onStageChange,
+  onToggleDoc,
+  onSaveNotes,
+}: ApplicationDetailModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-white p-0">
-        {application && (
-          <ApplicationDetailBody key={application.id} application={application} />
-        )}
+        {application ? (
+          <ApplicationDetailBody
+            application={application}
+            loading={Boolean(loading)}
+            saving={Boolean(saving)}
+            onStageChange={onStageChange}
+            onToggleDoc={onToggleDoc}
+            onSaveNotes={onSaveNotes}
+          />
+        ) : loading ? (
+          <div className="p-16 text-center text-sm text-slate-500">Loading application details...</div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
 }
 
-function ApplicationDetailBody({ application }: { application: Application }) {
-  const updateApplicationStage = useAppStore((s) => s.updateApplicationStage);
-  const toggleDoc = useAppStore((s) => s.toggleDoc);
-  const updateApplicationNotes = useAppStore((s) => s.updateApplicationNotes);
-
+function ApplicationDetailBody({
+  application,
+  loading,
+  saving,
+  onStageChange,
+  onToggleDoc,
+  onSaveNotes,
+}: {
+  application: Application;
+  loading: boolean;
+  saving: boolean;
+  onStageChange?: (id: string, stage: ApplicationStage) => void;
+  onToggleDoc?: (applicationId: string, docId: string) => void;
+  onSaveNotes?: (applicationId: string, notes: string) => void;
+}) {
   const [notes, setNotes] = useState(application.notes ?? "");
   const [saved, setSaved] = useState(false);
 
@@ -91,6 +122,9 @@ function ApplicationDetailBody({ application }: { application: Application }) {
         </DialogTitle>
       </DialogHeader>
 
+      {loading ? (
+        <div className="p-16 text-center text-sm text-slate-500">Loading application details...</div>
+      ) : (
         <div className="max-h-[65vh] space-y-5 overflow-y-auto px-6 py-5">
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-2xl bg-brand-gradient p-4 text-white">
@@ -127,7 +161,7 @@ function ApplicationDetailBody({ application }: { application: Application }) {
                 <button
                   key={d.id}
                   type="button"
-                  onClick={() => toggleDoc(application.id, d.id)}
+                  onClick={() => onToggleDoc?.(application.id, d.id)}
                   className={cn(
                     "flex items-center gap-2 rounded-md border px-3 py-2 text-left text-xs transition-colors",
                     d.done ? "border-green-200 bg-green-50 text-green-700" : "border-slate-200 bg-white text-slate-600 hover:border-gold-500/40"
@@ -187,7 +221,7 @@ function ApplicationDetailBody({ application }: { application: Application }) {
                 size="sm"
                 className="h-auto shrink-0 self-stretch"
                 onClick={() => {
-                  updateApplicationNotes(application.id, notes);
+                  onSaveNotes?.(application.id, notes);
                   setSaved(true);
                   setTimeout(() => setSaved(false), 1500);
                 }}
@@ -197,23 +231,24 @@ function ApplicationDetailBody({ application }: { application: Application }) {
             </div>
           </div>
         </div>
+      )}
 
-        <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
-          <p className="text-xs text-slate-500">Move this application forward</p>
-          <Select
-            value={application.stage}
-            onValueChange={(v) => updateApplicationStage(application.id, v as ApplicationStage)}
-          >
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STAGES.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+        <p className="text-xs text-slate-500">{saving ? "Saving changes..." : "Move this application forward"}</p>
+        <Select
+          value={application.stage}
+          onValueChange={(v) => onStageChange?.(application.id, v as ApplicationStage)}
+        >
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STAGES.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </>
   );
 }
