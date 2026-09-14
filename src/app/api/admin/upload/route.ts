@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookie } from "@/server/auth";
-import { nanoid } from "nanoid";
-import { put } from "@vercel/blob";
+import { UTApi } from "uploadthing/server";
 
 export async function POST(request: Request) {
   try {
@@ -12,17 +11,21 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string) || "uploads";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop() || "jpg";
-    const blobName = `${folder}/${nanoid(12)}.${ext}`;
-    const blob = await put(blobName, file, { access: "public" });
+    const utapi = new UTApi();
+    const [result] = await utapi.uploadFiles(file);
 
-    return NextResponse.json({ url: blob.url });
+    if (!result.data) {
+      const message = result.error?.message || result.error?.code || "Upload failed";
+      console.error("UploadThing error:", result.error);
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+
+    return NextResponse.json({ url: result.data.url });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

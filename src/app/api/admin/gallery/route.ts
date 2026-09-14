@@ -4,7 +4,9 @@ import { galleryPhotos } from "@/server/db/schema";
 import { getSessionFromCookie } from "@/server/auth";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { put, del } from "@vercel/blob";
+import { UTApi } from "uploadthing/server";
+
+const utapi = new UTApi();
 
 export async function GET() {
   try {
@@ -38,17 +40,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File, title and category are required" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop() || "jpg";
-    const blobName = `gallery/${nanoid(12)}.${ext}`;
-
-    const blob = await put(blobName, file, { access: "public" });
+    const [result] = await utapi.uploadFiles(file);
+    if (!result.data) {
+      const message = result.error?.message || result.error?.code || "Upload failed";
+      console.error("UploadThing gallery upload error:", result.error);
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
 
     const id = nanoid(12);
     await db.insert(galleryPhotos).values({
       id,
       title,
       category,
-      imageUrl: blob.url,
+      imageUrl: result.data.url,
       dateLabel: dateLabel || null,
       sortOrder,
       published: true,
@@ -98,8 +102,11 @@ export async function DELETE(request: Request) {
 
     await db.delete(galleryPhotos).where(eq(galleryPhotos.id, id));
 
-    if (imageUrl && imageUrl.includes("blob.vercel-storage.com")) {
-      try { await del(imageUrl); } catch {}
+    if (imageUrl) {
+      try {
+        const fileKey = imageUrl.split("/").pop() || imageUrl;
+        await utapi.deleteFiles(fileKey);
+      } catch {}
     }
 
     return NextResponse.json({ success: true });

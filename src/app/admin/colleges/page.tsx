@@ -178,6 +178,7 @@ export default function AdminCollegesPage() {
   const photosInputRef = useRef<HTMLInputElement>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchColleges();
@@ -201,15 +202,23 @@ export default function AdminCollegesPage() {
     fd.append("folder", folder);
     try {
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setUploadError(data?.error || "Upload failed");
+        return null;
+      }
       const data = await res.json();
       return data.url;
-    } catch { return null; }
+    } catch {
+      setUploadError("Network error during upload");
+      return null;
+    }
   }
 
   async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploadError(null);
     setUploadingCover(true);
     const url = await uploadFile(file, "colleges/cover");
     if (url) setForm((p) => ({ ...p, coverImage: url }));
@@ -220,6 +229,7 @@ export default function AdminCollegesPage() {
   async function handlePhotosUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    setUploadError(null);
     setUploadingPhotos(true);
     const urls: string[] = [];
     for (const file of Array.from(files)) {
@@ -827,6 +837,11 @@ export default function AdminCollegesPage() {
                   )}
                 </button>
               )}
+              {uploadError && (
+                <p className="flex items-center gap-1.5 text-xs font-medium text-red-600">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {uploadError}
+                </p>
+              )}
             </div>
           </div>
 
@@ -863,6 +878,11 @@ export default function AdminCollegesPage() {
                 )}
               </button>
             </div>
+            {uploadError && (
+              <p className="flex items-center gap-1.5 text-xs font-medium text-red-600">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {uploadError}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-6">
