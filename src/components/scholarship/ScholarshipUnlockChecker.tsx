@@ -180,6 +180,25 @@ export function ScholarshipUnlockChecker() {
           stream: questionnaire.stream ?? "",
         });
       }
+      // Persist lead to DB so it appears in /admin/leads (Scholarship category)
+      fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: authUser!.name,
+          phone: authUser!.phone,
+          email: authUser!.email,
+          source: "Scholarship Checker",
+          stream: questionnaire.stream ?? null,
+          scoreBand: questionnaire.scoreBand ?? null,
+          targetCollege: selectedPrimary?.id ?? null,
+          collegeId: selectedPrimary?.id ?? null,
+          collegeName: selectedPrimary?.name ?? null,
+          targetProgram: questionnaire.preferredProgram ?? null,
+          admissionTimeline: questionnaire.admissionTimeline ?? null,
+          lookingFor: `Scholarship Check · MBA/PGDM · ${selectedPrimary?.name ?? ""}`,
+        }),
+      }).catch(() => {});
       setView("result");
     }
     return (

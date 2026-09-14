@@ -16,6 +16,7 @@ import {
   ImagePlus,
   Upload,
   X,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -167,8 +168,10 @@ export default function AdminCollegesPage() {
   const [colleges, setColleges] = useState<CollegeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -246,11 +249,14 @@ export default function AdminCollegesPage() {
   }
 
   function startCreate() {
+    setIsCreating(true);
     setEditingId(null);
     setForm({ ...EMPTY_FORM });
+    setSaveError(null);
   }
 
   function startEdit(college: CollegeRow) {
+    setIsCreating(false);
     setEditingId(college.id);
     const pp = (college.partnerProfile as Record<string, unknown> | null) || {};
     setForm({
@@ -516,11 +522,18 @@ export default function AdminCollegesPage() {
       });
 
       if (res.ok) {
+        setIsCreating(false);
         setEditingId(null);
         setForm({ ...EMPTY_FORM });
+        setSaveError(null);
         fetchColleges();
+      } else {
+        const data = await res.json().catch(() => null);
+        setSaveError(data?.error ?? `Failed to ${method === "PUT" ? "update" : "create"} college.`);
       }
-    } catch {}
+    } catch {
+      setSaveError("Network error — please try again.");
+    }
     setSaving(false);
   }
 
@@ -543,7 +556,7 @@ export default function AdminCollegesPage() {
       (c.city || "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const showForm = editingId !== null || form.name !== "";
+  const showForm = isCreating || editingId !== null;
 
   return (
     <div className="space-y-6">
@@ -1228,6 +1241,11 @@ export default function AdminCollegesPage() {
           </div>
 
           <div className="flex gap-3">
+            {saveError && (
+              <p className="flex items-center gap-2 text-sm font-medium text-red-600">
+                <AlertCircle className="h-4 w-4" /> {saveError}
+              </p>
+            )}
             <Button
               variant="gold"
               onClick={handleSave}
@@ -1238,8 +1256,10 @@ export default function AdminCollegesPage() {
             <Button
               variant="outline"
               onClick={() => {
+                setIsCreating(false);
                 setEditingId(null);
                 setForm({ ...EMPTY_FORM });
+                setSaveError(null);
               }}
             >
               Cancel

@@ -12,6 +12,7 @@ import { JourneyTeaser } from "@/components/homepage/JourneyTeaser";
 import { TestimonialStrip } from "@/components/homepage/TestimonialStrip";
 import { GlobalEnquiryWidget } from "@/components/homepage/GlobalEnquiryWidget";
 import { ScrollEnquiryPopup } from "@/components/homepage/ScrollEnquiryPopup";
+import { AnnouncementTicker } from "@/components/homepage/AnnouncementTicker";
 import { type Stream } from "@/lib/scholarship";
 import { BadgePercent, GraduationCap } from "lucide-react";
 
@@ -25,9 +26,11 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="flex-1">
+        <AnnouncementTicker />
         <HeroSection search={search} onSearch={setSearch} stream={stream} onStream={setStream} />
         <GlobalEnquiryWidget />
         <ScrollEnquiryPopup />
+        <WhyOrion />
 
         <CollegeGrid
           search={search}
@@ -64,8 +67,6 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
-
-        <WhyOrion />
 
         <TestimonialStrip />
 
