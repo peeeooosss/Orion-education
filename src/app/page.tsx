@@ -14,7 +14,7 @@ import { GlobalEnquiryWidget } from "@/components/homepage/GlobalEnquiryWidget";
 import { ScrollEnquiryPopup } from "@/components/homepage/ScrollEnquiryPopup";
 import { AnnouncementTicker } from "@/components/homepage/AnnouncementTicker";
 import { type Stream } from "@/lib/scholarship";
-import { BadgePercent, GraduationCap } from "lucide-react";
+import { BadgePercent } from "lucide-react";
 
 export default function HomePage() {
   const [search, setSearch] = React.useState("");
@@ -69,29 +69,6 @@ export default function HomePage() {
         </section>
 
         <TestimonialStrip />
-
-        <section className="border-y border-surface-200 bg-white py-10">
-          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-500 text-brand-950">
-                <GraduationCap className="h-5 w-5" strokeWidth={1.75} />
-              </div>
-              <div>
-                <p className="font-semibold text-surface-900">Your application, tracked live</p>
-                <p className="text-sm text-surface-600">
-                  Send one enquiry and a counsellor calls you within minutes — watch your
-                  application progress light up in your portal.
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/student/dashboard"
-              className="rounded-full bg-gold-500 px-6 py-3 text-sm font-semibold text-brand-950 transition-colors hover:bg-gold-600"
-            >
-              Track in Student Portal →
-            </Link>
-          </div>
-        </section>
       </main>
       <Footer />
     </div>
