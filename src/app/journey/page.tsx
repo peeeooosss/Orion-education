@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight, Route, Sparkles, UserRound } from "lucide-react";
+import { Route, Sparkles, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 
@@ -51,12 +50,6 @@ export default function JourneyPage() {
                         <p className="text-xs text-surface-500">{step.tagline}</p>
                       </div>
                     </div>
-                    <Link
-                      href={step.cta.href}
-                      className="inline-flex items-center gap-1 self-start rounded-full bg-gold-500 px-4 py-2 text-xs font-bold text-brand-950 transition-colors hover:bg-gold-600 sm:self-center"
-                    >
-                      {step.cta.label} <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
                   </div>
                   <div className="grid gap-4 pt-4 sm:grid-cols-2">
                     <div>

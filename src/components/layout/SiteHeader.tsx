@@ -134,7 +134,7 @@ export function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="gold" size="sm" className="hidden uppercase tracking-wide sm:inline-flex" onClick={openEnquiry}>
+          <Button variant="gold" size="sm" className="hidden sm:inline-flex" onClick={openEnquiry}>
             Enquire Now
           </Button>
           {!authUser ? (
@@ -189,7 +189,7 @@ export function SiteHeader() {
         <div className="space-y-1 px-4 py-3">
           <button
             onClick={() => { setOpen(false); openEnquiry(); }}
-            className="block w-full rounded-lg bg-brand-gradient px-3 py-2 text-left text-sm font-bold uppercase tracking-wide text-white"
+            className="block w-full rounded-lg bg-brand-gradient px-3 py-2 text-left text-sm font-bold text-white"
           >
             Enquire Now
           </button>
