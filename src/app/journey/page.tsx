@@ -4,7 +4,6 @@ import { Route, Sparkles, UserRound } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 
-import { PipelineWidget } from "@/components/journey/PipelineWidget";
 import { FollowStudent } from "@/components/journey/FollowStudent";
 import { JOURNEY_STEPS } from "@/lib/journey";
 
@@ -85,7 +84,6 @@ export default function JourneyPage() {
           </ol>
 
           <div className="mx-auto mt-16 max-w-4xl space-y-6">
-            <PipelineWidget />
             <FollowStudent />
           </div>
         </div>
