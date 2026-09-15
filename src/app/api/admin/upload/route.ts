@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const utapi = new UTApi();
-    const [result] = await utapi.uploadFiles(file);
+    const result = await utapi.uploadFiles(file);
 
     if (!result.data) {
       const message = result.error?.message || result.error?.code || "Upload failed";

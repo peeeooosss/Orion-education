@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File, title and category are required" }, { status: 400 });
     }
 
-    const [result] = await utapi.uploadFiles(file);
+    const result = await utapi.uploadFiles(file);
     if (!result.data) {
       const message = result.error?.message || result.error?.code || "Upload failed";
       console.error("UploadThing gallery upload error:", result.error);
