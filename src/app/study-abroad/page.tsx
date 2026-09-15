@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Plane, Globe2, GraduationCap, ChevronRight, ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
@@ -31,11 +32,16 @@ export default function StudyAbroadPage() {
       <SiteHeader />
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-800 to-indigo-950 text-white">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-gold-500/20 blur-3xl" />
-        </div>
+      <section className="relative overflow-hidden bg-indigo-950 text-white">
+        <Image
+          src="/images/study-abroad-hero.jpg"
+          alt="Graduates celebrating at an international university ceremony"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-indigo-950/85 to-indigo-900/40" />
         <div className="relative mx-auto max-w-7xl px-4 py-20 md:py-28">
           <div className="max-w-3xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium">

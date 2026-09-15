@@ -4,18 +4,21 @@ const columns = [
   {
     title: "Explore",
     links: [
-      { label: "Top Colleges", href: "#colleges" },
+      { label: "Top Colleges", href: "/#colleges" },
       { label: "Study Abroad", href: "/study-abroad" },
       { label: "Student Journey", href: "/journey" },
       { label: "Scholarships", href: "/scholarship" },
+      { label: "Eligibility Check", href: "/scholarship" },
     ],
   },
   {
-    title: "Portals",
+    title: "Resources",
     links: [
-      { label: "Student Portal", href: "/auth/sign-in" },
-      { label: "Agent CRM", href: "/auth/sign-in" },
-      { label: "Admin Overview", href: "/auth/sign-in" },
+      { label: "Blog", href: "/blog" },
+      { label: "MBA vs PGDM — which is right?", href: "/blog/mba-vs-pgdm-india-2026" },
+      { label: "How to get an MBA scholarship", href: "/blog/how-to-get-scholarship-mba-pgdm" },
+      { label: "Top MBA colleges in Bangalore", href: "/blog/top-mba-pgdm-colleges-bangalore-2026" },
+      { label: "Admission documents checklist", href: "/blog/college-admission-documents-checklist" },
     ],
   },
   {
@@ -45,7 +48,12 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-3 max-w-xs text-sm text-surface-300">
-              Find, compare and get admitted with confidence — Bachelors, Masters, MBA &amp; PGDM colleges with scholarships up to ₹30,000 at partner colleges.
+              Find, compare and get admitted with confidence — Bachelors, Masters, MBA &amp; PGDM colleges
+              in Bangalore and across India, with assured scholarships up to ₹30,000 at partner colleges.
+            </p>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-surface-400">
+              Guides on MBA &amp; PGDM admissions, scholarship eligibility, return on investment and
+              document checklists — written to help you choose the right business school.
             </p>
           </div>
 
@@ -65,9 +73,13 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 sm:flex-row">
+        <div className="mt-10 space-y-2 border-t border-white/10 pt-6 text-center sm:text-left">
           <p className="text-xs text-surface-400">
             © 2026 Orion Education. Frontend demo prototype — no real admissions processed.
+          </p>
+          <p className="text-xs leading-relaxed text-surface-500">
+            Orion Education helps students shortlist MBA, PGDM, B.Tech and BBA colleges in Bangalore and
+            India, compare fees and placements, and unlock eligibility-backed scholarships up to ₹30,000.
           </p>
           <p className="text-xs text-surface-400">Powered by AURA AI infrastructure</p>
         </div>

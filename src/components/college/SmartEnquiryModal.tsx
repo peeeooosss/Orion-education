@@ -100,9 +100,9 @@ export function SmartEnquiryModal({ college, open, onOpenChange }: SmartEnquiryM
           <div className="py-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gold-100"><Rocket className="h-8 w-8 text-gold-700" /></div>
             <h3 className="mt-4 font-display text-2xl font-bold text-surface-900">Enquiry sent!</h3>
-            <p className="mt-2 text-sm text-surface-600">Your intent just pinged our telecaller CRM live. A counsellor will reach out within minutes.</p>
+            <p className="mt-2 text-sm text-surface-600">Your intent just reached our counselling team in real time. A counsellor will reach out within minutes.</p>
             <div className="mt-5 flex flex-col gap-2">
-              <a href="/agent/dashboard"><Button variant="gold" className="h-11 w-full">Track it in the Agent Portal →</Button></a>
+              <a href="/student/dashboard"><Button variant="gold" className="h-11 w-full">Track it in your Student Portal →</Button></a>
               <Button variant="outline" className="h-11 w-full" onClick={() => onOpenChange(false)}>Done</Button>
             </div>
           </div>

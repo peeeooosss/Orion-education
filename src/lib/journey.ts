@@ -79,8 +79,8 @@ export const JOURNEY_STEPS: JourneyStep[] = [
       "Keep your phone handy — someone calls you back.",
     ],
     orion: [
-      "Your enquiry pings the agent CRM in real time — no forms lost in a queue.",
-      "A telecaller instantly sees your profile, opening script and a 48-hour voucher.",
+      "Your enquiry reaches a counsellor in real time — no forms lost in a queue.",
+      "A counsellor instantly sees your profile, opening notes and a 48-hour voucher.",
     ],
     cta: { label: "Try a Smart Enquiry", href: "/college/rvce" },
   },
@@ -95,10 +95,10 @@ export const JOURNEY_STEPS: JourneyStep[] = [
       "Agree on which college and program to apply to.",
     ],
     orion: [
-      "Agents track every lead in the pipeline; your status moves to Contacted the moment they reach out.",
-      "The counsellor already has your intent and scholarship amount on screen.",
+      "A counsellor updates your status live the moment they reach out.",
+      "Everything you've told Orion is on their screen — so you never repeat yourself.",
     ],
-    cta: { label: "See the agent portal", href: "/agent/dashboard" },
+    cta: { label: "Track my follow-up", href: "/student/dashboard" },
   },
   {
     n: 6,
@@ -112,9 +112,9 @@ export const JOURNEY_STEPS: JourneyStep[] = [
     ],
     orion: [
       "Orion creates a 7-document checklist and a timeline for every application.",
-      "Your scholarship is auto-applied, and the agent tracks docs, notes and stages.",
+      "Your scholarship is auto-applied, and your counsellor tracks docs, notes and stages.",
     ],
-    cta: { label: "See applications", href: "/agent/applications" },
+    cta: { label: "See your applications", href: "/student/applications" },
   },
   {
     n: 7,
@@ -143,9 +143,9 @@ export const JOURNEY_STEPS: JourneyStep[] = [
       "Welcome to campus — onboarding begins.",
     ],
     orion: [
-      "Admission is recorded end-to-end and admin sees the conversion in pipeline health.",
-      "Your journey becomes part of the numbers that keep Orion accountable.",
+      "Admission is recorded end-to-end — offer, fees and scholarship stay in sync in your portal.",
+      "Your journey is tracked from search to seat, so nothing gets lost along the way.",
     ],
-    cta: { label: "See the admin overview", href: "/admin/dashboard" },
+    cta: { label: "See your portal", href: "/student/dashboard" },
   },
 ];

@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 const navLinks = [
   { label: "Colleges", href: "/#colleges" },
   { label: "Study Abroad", href: "/study-abroad" },
-  { label: "How it works", href: "/journey" },
+  { label: "Student Journey", href: "/journey" },
   { label: "Scholarships", href: "/scholarship" },
 ];
 
