@@ -4,9 +4,37 @@ import { colleges, programs, websiteLeads } from "@/server/db/schema";
 import { getSessionFromCookie } from "@/server/auth";
 import { eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { UTApi } from "uploadthing/server";
 
 function uid(): string {
   return nanoid(12);
+}
+
+function uploadKeysFrom(urls: (string | null | undefined)[]): string[] {
+  const keys: string[] = [];
+  for (const u of urls) {
+    if (!u) continue;
+    try {
+      const parsed = new URL(u);
+      if (!parsed.hostname.includes("utfs.io") && !parsed.hostname.includes("ufs.sh")) continue;
+      const key = parsed.pathname.split("/").pop();
+      if (key) keys.push(key);
+    } catch {
+      continue;
+    }
+  }
+  return keys;
+}
+
+async function deleteUploadFiles(urls: (string | null | undefined)[]): Promise<void> {
+  const keys = uploadKeysFrom(urls);
+  if (keys.length === 0) return;
+  try {
+    const utapi = new UTApi();
+    await utapi.deleteFiles(keys);
+  } catch (error) {
+    console.error("UploadThing cleanup error:", error);
+  }
 }
 
 export async function GET() {
@@ -127,6 +155,8 @@ export async function PUT(request: Request) {
     if (updates.highestPlacement !== undefined) updates.highestPlacement = String(updates.highestPlacement);
     if (updates.budget !== undefined) updates.budget = String(updates.budget);
 
+    const existing = await db.select().from(colleges).where(eq(colleges.id, id)).limit(1);
+
     await db.update(colleges).set(updates).where(eq(colleges.id, id));
 
     if (programsList && Array.isArray(programsList)) {
@@ -146,6 +176,18 @@ export async function PUT(request: Request) {
           seats: prog.seats || null,
         });
       }
+    }
+
+    const oldCollege = existing[0];
+    if (oldCollege) {
+      const newCover = updates.coverImage ?? null;
+      const removedCover = oldCollege.coverImage !== newCover ? oldCollege.coverImage : null;
+      const oldPhotos = Array.isArray(oldCollege.photos) ? (oldCollege.photos as string[]) : [];
+      const newPhotos = Array.isArray(updates.photos) ? (updates.photos as string[]) : [];
+      await deleteUploadFiles([
+        removedCover,
+        ...oldPhotos.filter((p) => !newPhotos.includes(p)),
+      ]);
     }
 
     return NextResponse.json({ success: true });
@@ -168,9 +210,19 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "College ID is required" }, { status: 400 });
     }
 
+    const existing = await db.select().from(colleges).where(eq(colleges.id, id)).limit(1);
+
     await db.delete(programs).where(eq(programs.collegeId, id));
     await db.update(websiteLeads).set({ collegeId: null }).where(eq(websiteLeads.collegeId, id));
     await db.delete(colleges).where(eq(colleges.id, id));
+
+    const oldCollege = existing[0];
+    if (oldCollege) {
+      await deleteUploadFiles([
+        oldCollege.coverImage,
+        ...(Array.isArray(oldCollege.photos) ? (oldCollege.photos as string[]) : []),
+      ]);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

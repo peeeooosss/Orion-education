@@ -806,33 +806,48 @@ export default function AdminCollegesPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>Cover Image</Label>
+              <Label>Banner Photo</Label>
+              <p className="text-xs text-slate-500">
+                Shown as the wide banner on the college page (5:1 crop).
+              </p>
               <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
               {form.coverImage ? (
-                <div className="relative overflow-hidden rounded-xl border border-slate-200">
+                <div className="relative w-full overflow-hidden rounded-xl border border-slate-200" style={{ aspectRatio: "5/1" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={form.coverImage} alt="Cover" className="h-32 w-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={removeCoverImage}
-                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <img src={form.coverImage} alt="Banner preview" className="h-full w-full object-cover" />
+                  <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent p-2">
+                    <button
+                      type="button"
+                      onClick={() => coverInputRef.current?.click()}
+                      disabled={uploadingCover}
+                      className="flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-brand-950 hover:bg-white"
+                    >
+                      <Upload className="h-3.5 w-3.5" /> {uploadingCover ? "Uploading..." : "Replace"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={removeCoverImage}
+                      className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                      aria-label="Remove banner"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => coverInputRef.current?.click()}
                   disabled={uploadingCover}
-                  className="flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-brand-400 hover:bg-brand-50"
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-brand-400 hover:bg-brand-50"
+                  style={{ aspectRatio: "5/1" }}
                 >
                   {uploadingCover ? (
                     <span className="text-sm text-slate-500">Uploading...</span>
                   ) : (
                     <>
                       <Upload className="h-6 w-6 text-slate-400" />
-                      <span className="text-sm font-medium text-slate-500">Upload cover image</span>
+                      <span className="text-sm font-medium text-slate-500">Upload banner photo</span>
                     </>
                   )}
                 </button>
@@ -1297,6 +1312,16 @@ export default function AdminCollegesPage() {
               key={college.id}
               className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
             >
+              {college.coverImage && (
+                <div className="relative mb-3 h-24 w-full overflow-hidden rounded-xl border border-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={college.coverImage}
+                    alt={`${college.name} banner`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-950 text-gold-500">
