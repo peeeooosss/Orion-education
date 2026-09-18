@@ -62,15 +62,12 @@ const PORTAL_LINKS: Record<string, { href: string; label: string; icon: typeof G
 export function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2.5" aria-label="Orion Education Home">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient shadow-lg shadow-brand-950/20 ring-1 ring-white/10">
-        <svg className="h-5 w-5 text-gold-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M21 2a3 3 0 0 0-3.1 3.5l-4 4a2 2 0 0 0-2.1 1l-4.7 4.7a2 2 0 1 0 1.4 1.4l4.7-4.7a2 2 0 0 0 1-2.1l4-4A3 3 0 0 0 21 2Z" />
-          <path d="M3 15l3 2 1-3 2-1-2 1 1 3 3 1-3-2-1 3-2-1 1-3-2 1-1-3Z" opacity="0.7" />
-        </svg>
-      </div>
-      <span className="font-display text-2xl font-bold tracking-tight text-surface-900">
-        Orion<span className="text-gold-600"> Education</span>
-      </span>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/logo.webp"
+        alt="Orion Education"
+        className="h-9 w-auto object-contain sm:h-10"
+      />
     </Link>
   );
 }

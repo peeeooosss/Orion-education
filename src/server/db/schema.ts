@@ -377,3 +377,16 @@ export const galleryPhotos = pgTable("gallery_photos", {
   published: boolean("published").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ─── News & Updates ──────────────────────────────────────
+export const newsItems = pgTable("news_items", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  excerpt: text("excerpt"),
+  category: text("category").notNull().default("General"),
+  date: date("date").notNull(),
+  externalUrl: text("external_url"),
+  isPublished: boolean("is_published").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

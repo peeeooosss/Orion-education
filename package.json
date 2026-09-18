@@ -14,7 +14,9 @@
     "bootstrap:admin": "npx tsx scripts/bootstrap-admin.ts",
     "migrate:leads-source": "npx tsx scripts/migrate-website-leads-source.ts",
     "migrate:leads-assign": "npx tsx scripts/migrate-website-leads-assign.ts",
-    "migrate:leads-category": "npx tsx scripts/migrate-leads-category.ts"
+    "migrate:leads-category": "npx tsx scripts/migrate-leads-category.ts",
+    "migrate:news": "npx tsx scripts/create-news-table.ts",
+    "seed:news": "npx tsx scripts/seed-news.ts"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

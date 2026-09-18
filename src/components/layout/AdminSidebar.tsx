@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, Building2, LogOut, Images, Inbox, Sparkles, GraduationCap, Globe2, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, ShieldCheck, TrendingUp, Wallet, Users2, BarChart3, FileStack, Upload, IndianRupee, ChevronLeft, ChevronRight, Building2, LogOut, Images, Inbox, Sparkles, GraduationCap, Globe2, FileSpreadsheet, Newspaper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { useRouter } from "next/navigation";
@@ -32,6 +32,7 @@ const navGroups: { section: string; items: { title: string; href: string; icon: 
       { title: "Payments", href: "/admin/payments", icon: IndianRupee, section: null },
       { title: "Applications Pipeline", href: "/admin/dashboard?section=applications", icon: FileStack, section: "applications" },
       { title: "Gallery", href: "/admin/gallery", icon: Images, section: null },
+      { title: "News & Updates", href: "/admin/news", icon: Newspaper, section: null },
     ],
   },
 ];

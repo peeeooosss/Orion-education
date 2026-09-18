@@ -37,15 +37,13 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
           <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
-                <svg className="h-4 w-4 text-gold-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M21 2a3 3 0 0 0-3.1 3.5l-4 4a2 2 0 0 0-2.1 1l-4.7 4.7a2 2 0 1 0 1.4 1.4l4.7-4.7a2 2 0 0 0 1-2.1l4-4A3 3 0 0 0 21 2Z" />
-                </svg>
-              </div>
-              <span className="font-display text-lg font-bold">
-                Orion<span className="text-gold-500"> Education</span>
-              </span>
+            <Link href="/" className="inline-flex items-center rounded-2xl bg-white px-4 py-2" aria-label="Orion Education Home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/logo.webp"
+                alt="Orion Education"
+                className="h-8 w-auto object-contain"
+              />
             </Link>
             <p className="mt-3 max-w-xs text-sm text-surface-300">
               Find, compare and get admitted with confidence — Bachelors, Masters, MBA &amp; PGDM colleges

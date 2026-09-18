@@ -4,12 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
+import { WhatsAppFloat } from "@/components/homepage/WhatsAppFloat";
 
 import { HeroSection } from "@/components/homepage/HeroSection";
 import { CollegeGrid, type SortKey } from "@/components/homepage/CollegeGrid";
 import { WhyOrion } from "@/components/homepage/WhyOrion";
 import { JourneyTeaser } from "@/components/homepage/JourneyTeaser";
 import { TestimonialStrip } from "@/components/homepage/TestimonialStrip";
+import { NewsSection } from "@/components/homepage/NewsSection";
 import { GlobalEnquiryWidget } from "@/components/homepage/GlobalEnquiryWidget";
 import { ScrollEnquiryPopup } from "@/components/homepage/ScrollEnquiryPopup";
 import { AnnouncementTicker } from "@/components/homepage/AnnouncementTicker";
@@ -69,8 +71,10 @@ export default function HomePage() {
         </section>
 
         <TestimonialStrip />
+        <NewsSection />
       </main>
       <Footer />
+      <WhatsAppFloat />
     </div>
   );
 }
