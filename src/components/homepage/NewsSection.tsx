@@ -71,19 +71,8 @@ export function NewsSection() {
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => {
-            const Tag = item.externalUrl ? Link : "div";
-            return (
-              <Tag
-                key={item.id}
-                {...(item.externalUrl
-                  ? {
-                      href: item.externalUrl,
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    }
-                  : {})}
-                className="group flex flex-col rounded-2xl border border-surface-200 bg-white p-6 shadow-card transition-shadow hover:shadow-float"
-              >
+            const inner = (
+              <>
                 <div className="flex items-center justify-between gap-2">
                   <span
                     className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold ring-1 ${CATEGORY_STYLES[item.category] || CATEGORY_STYLES.General}`}
@@ -108,7 +97,24 @@ export function NewsSection() {
                     Read more <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </span>
                 )}
-              </Tag>
+              </>
+            );
+            const cardClass =
+              "group flex flex-col rounded-2xl border border-surface-200 bg-white p-6 shadow-card transition-shadow hover:shadow-float";
+            return item.externalUrl ? (
+              <Link
+                key={item.id}
+                href={item.externalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cardClass}
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div key={item.id} className={cardClass}>
+                {inner}
+              </div>
             );
           })}
         </div>
