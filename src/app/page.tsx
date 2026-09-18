@@ -15,6 +15,7 @@ import { NewsSection } from "@/components/homepage/NewsSection";
 import { GlobalEnquiryWidget } from "@/components/homepage/GlobalEnquiryWidget";
 import { ScrollEnquiryPopup } from "@/components/homepage/ScrollEnquiryPopup";
 import { AnnouncementTicker } from "@/components/homepage/AnnouncementTicker";
+import { NoticeBanner } from "@/components/homepage/NoticeBanner";
 import { type Stream } from "@/lib/scholarship";
 import { BadgePercent } from "lucide-react";
 
@@ -29,6 +30,7 @@ export default function HomePage() {
       <SiteHeader />
       <main className="flex-1">
         <AnnouncementTicker />
+        <NoticeBanner />
         <HeroSection search={search} onSearch={setSearch} stream={stream} onStream={setStream} />
         <GlobalEnquiryWidget />
         <ScrollEnquiryPopup />
